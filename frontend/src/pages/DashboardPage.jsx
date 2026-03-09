@@ -1,7 +1,7 @@
 import { useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useDispatch, useSelector } from 'react-redux';
-import { Card, CardActionArea, CardContent, Grid2, Paper, Stack, Typography } from '@mui/material';
+import { Card, CardActionArea, CardContent, Grid2, LinearProgress, Paper, Stack, Typography } from '@mui/material';
 import {
   Bar,
   BarChart,
@@ -58,13 +58,37 @@ export default function DashboardPage() {
       </Typography>
 
       <Grid2 container spacing={2}>
-        {cardItems.map((item) => (
+        {cardItems.map((item, index) => (
           <Grid2 key={item.label} size={{ xs: 12, md: 4 }}>
-            <Card sx={{ background: 'linear-gradient(145deg, #ffffff 0%, #f5faf9 100%)' }}>
+            <Card
+              sx={{
+                background:
+                  index === 2
+                    ? 'linear-gradient(135deg, #20a2f5 0%, #1f8df0 55%, #1677d6 100%)'
+                    : 'linear-gradient(145deg, #ffffff 0%, #f8fbff 100%)'
+              }}
+            >
               <CardActionArea onClick={() => openFilteredRtis(item.params)}>
                 <CardContent>
-                  <Typography color="text.secondary">{item.label}</Typography>
-                  <Typography variant="h4" color="primary.main" fontWeight={800}>{item.value}</Typography>
+                  <Typography color={index === 2 ? 'rgba(255,255,255,0.9)' : 'text.secondary'}>
+                    {item.label}
+                  </Typography>
+                  <Typography variant="h4" color={index === 2 ? '#fff' : 'primary.main'} fontWeight={800}>
+                    {item.value}
+                  </Typography>
+                  <LinearProgress
+                    variant="determinate"
+                    value={Math.min(100, 20 + item.value * 5)}
+                    sx={{
+                      mt: 1.2,
+                      height: 6,
+                      borderRadius: 999,
+                      bgcolor: index === 2 ? 'rgba(255,255,255,0.25)' : '#e7eef7',
+                      '& .MuiLinearProgress-bar': {
+                        bgcolor: index === 2 ? '#fff' : '#1f8df0'
+                      }
+                    }}
+                  />
                 </CardContent>
               </CardActionArea>
             </Card>

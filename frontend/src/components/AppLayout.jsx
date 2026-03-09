@@ -2,6 +2,7 @@ import { useMemo, useState } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useDispatch, useSelector } from 'react-redux';
 import {
+  Avatar,
   AppBar,
   Box,
   Button,
@@ -12,6 +13,7 @@ import {
   ListItemButton,
   ListItemIcon,
   ListItemText,
+  Tooltip,
   useMediaQuery,
   useTheme,
   Toolbar,
@@ -25,9 +27,12 @@ import CalendarMonthIcon from '@mui/icons-material/CalendarMonth';
 import SearchIcon from '@mui/icons-material/Search';
 import MenuIcon from '@mui/icons-material/Menu';
 import LogoutIcon from '@mui/icons-material/Logout';
+import KeyboardDoubleArrowLeftIcon from '@mui/icons-material/KeyboardDoubleArrowLeft';
+import KeyboardDoubleArrowRightIcon from '@mui/icons-material/KeyboardDoubleArrowRight';
 import { logout } from '../features/auth/authSlice';
 
 const drawerWidth = 250;
+const drawerCollapsedWidth = 76;
 
 const items = [
   { label: 'Dashboard', path: '/dashboard', icon: <DashboardIcon /> },
@@ -46,6 +51,7 @@ export default function AppLayout({ children }) {
   const location = useLocation();
   const [search, setSearch] = useState('');
   const [mobileOpen, setMobileOpen] = useState(false);
+  const [desktopCollapsed, setDesktopCollapsed] = useState(false);
 
   const activePath = useMemo(() => {
     const found = items.find((item) => location.pathname.startsWith(item.path));
@@ -67,38 +73,61 @@ export default function AppLayout({ children }) {
 
   const drawerContent = (
     <>
-      <Toolbar>
-        <Typography variant="h6" fontWeight={800} color="primary.main">
-          RTI CMS
-        </Typography>
+      <Toolbar sx={{ justifyContent: desktopCollapsed ? 'center' : 'space-between' }}>
+        {!desktopCollapsed && (
+          <Typography variant="h6" fontWeight={800} color="#2f3d4a">
+            RTI CMS
+          </Typography>
+        )}
+        {!isMobile && (
+          <IconButton size="small" onClick={() => setDesktopCollapsed((prev) => !prev)}>
+            {desktopCollapsed ? <KeyboardDoubleArrowRightIcon /> : <KeyboardDoubleArrowLeftIcon />}
+          </IconButton>
+        )}
       </Toolbar>
+      {!desktopCollapsed && (
+        <Typography variant="caption" sx={{ px: 2, py: 1, color: '#66788a', fontWeight: 600 }}>
+          Navigation
+        </Typography>
+      )}
       <List>
         {items.map((item) => (
-          <ListItemButton
-            key={item.path}
-            selected={activePath === item.path}
-            onClick={() => onNavigate(item.path)}
-            sx={{
-              mx: 1,
-              borderRadius: 2,
-              mb: 0.5,
-              '&.Mui-selected': {
-                bgcolor: '#d7ecea',
-                color: 'primary.main',
-                '& .MuiListItemIcon-root': { color: 'primary.main' }
-              }
-            }}
-          >
-            <ListItemIcon>{item.icon}</ListItemIcon>
-            <ListItemText primary={item.label} />
-          </ListItemButton>
+          <Tooltip key={item.path} title={desktopCollapsed ? item.label : ''} placement="right">
+            <ListItemButton
+              selected={activePath === item.path}
+              onClick={() => onNavigate(item.path)}
+              sx={{
+                mx: 1,
+                borderRadius: 2,
+                mb: 0.5,
+                minHeight: 42,
+                justifyContent: desktopCollapsed ? 'center' : 'initial',
+                px: desktopCollapsed ? 1.5 : 2,
+                '&.Mui-selected': {
+                  bgcolor: '#e7f3ff',
+                  color: 'primary.main',
+                  '& .MuiListItemIcon-root': { color: 'primary.main' }
+                }
+              }}
+            >
+              <ListItemIcon
+                sx={{
+                  minWidth: desktopCollapsed ? 0 : 36,
+                  justifyContent: 'center'
+                }}
+              >
+                {item.icon}
+              </ListItemIcon>
+              {!desktopCollapsed && <ListItemText primary={item.label} />}
+            </ListItemButton>
+          </Tooltip>
         ))}
       </List>
     </>
   );
 
   return (
-    <Box sx={{ display: 'flex', minHeight: '100vh', bgcolor: '#f7f9fc' }}>
+    <Box sx={{ display: 'flex', minHeight: '100vh', bgcolor: '#eef1f6' }}>
       {isMobile ? (
         <Drawer
           variant="temporary"
@@ -108,8 +137,10 @@ export default function AppLayout({ children }) {
           sx={{
             '& .MuiDrawer-paper': {
               width: drawerWidth,
+              ...(desktopCollapsed && !isMobile ? { width: drawerCollapsedWidth } : {}),
               boxSizing: 'border-box',
-              background: 'linear-gradient(180deg, #f6fbfb 0%, #ffffff 65%)'
+              background: '#f8fafc',
+              borderRight: '1px solid #d8dee8'
             }
           }}
         >
@@ -119,12 +150,13 @@ export default function AppLayout({ children }) {
         <Drawer
           variant="permanent"
           sx={{
-            width: drawerWidth,
+            width: desktopCollapsed ? drawerCollapsedWidth : drawerWidth,
             flexShrink: 0,
             '& .MuiDrawer-paper': {
-              width: drawerWidth,
+              width: desktopCollapsed ? drawerCollapsedWidth : drawerWidth,
               boxSizing: 'border-box',
-              background: 'linear-gradient(180deg, #f6fbfb 0%, #ffffff 65%)'
+              background: '#f8fafc',
+              borderRight: '1px solid #d8dee8'
             }
           }}
         >
@@ -139,55 +171,67 @@ export default function AppLayout({ children }) {
           elevation={0}
           sx={{
             borderBottom: '1px solid #d7e1ea',
-            bgcolor: 'rgb(255 255 255 / 75%)',
-            backdropFilter: 'blur(10px)'
+            bgcolor: '#eef1f6'
           }}
         >
-          <Toolbar sx={{ gap: 1.5, flexWrap: { xs: 'wrap', sm: 'nowrap' } }}>
-            {isMobile && (
-              <IconButton onClick={() => setMobileOpen(true)} edge="start">
-                <MenuIcon />
+          <Toolbar sx={{ gap: 1.5, justifyContent: 'space-between', flexWrap: { xs: 'wrap', sm: 'nowrap' } }}>
+            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5, flex: 1, minWidth: 0 }}>
+              {isMobile && (
+                <IconButton onClick={() => setMobileOpen(true)} edge="start">
+                  <MenuIcon />
+                </IconButton>
+              )}
+              {isMobile && (
+                <Typography variant="subtitle1" fontWeight={700} sx={{ mr: 0.5 }}>
+                  RTI CMS
+                </Typography>
+              )}
+              <InputBase
+                placeholder="Search RTI number, subject, department"
+                value={search}
+                onChange={(event) => setSearch(event.target.value)}
+                onKeyDown={submitSearch}
+                sx={{
+                  px: 1,
+                  py: 0.5,
+                  border: '1px solid #d5dce6',
+                  backgroundColor: '#fff',
+                  borderRadius: 2,
+                  width: '100%',
+                  maxWidth: { xs: '100%', sm: 480 }
+                }}
+              />
+              <IconButton onClick={() => navigate(`/rtis?search=${encodeURIComponent(search)}`)}>
+                <SearchIcon />
               </IconButton>
-            )}
-            {isMobile && (
-              <Typography variant="subtitle1" fontWeight={700} sx={{ mr: 1 }}>
-                RTI CMS
+            </Box>
+            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, ml: 1 }}>
+              <Avatar
+                sx={{
+                  width: 32,
+                  height: 32,
+                  bgcolor: '#dbeafe',
+                  color: '#1d4ed8',
+                  fontSize: 14,
+                  fontWeight: 700
+                }}
+              >
+                {(user?.name || user?.email || 'U').charAt(0).toUpperCase()}
+              </Avatar>
+              <Typography variant="body2" color="text.secondary" sx={{ display: { xs: 'none', md: 'block' } }}>
+                {user?.name || user?.email}
               </Typography>
-            )}
-            <InputBase
-              placeholder="Search RTI number, subject, department"
-              value={search}
-              onChange={(event) => setSearch(event.target.value)}
-              onKeyDown={submitSearch}
-              sx={{
-                px: 1,
-                py: 0.5,
-                border: '1px solid #d6dceb',
-                borderRadius: 1,
-                width: '100%',
-                maxWidth: { xs: '100%', sm: 480 },
-                order: { xs: 3, sm: 1 }
-              }}
-            />
-            <IconButton
-              sx={{ order: { xs: 2, sm: 2 } }}
-              onClick={() => navigate(`/rtis?search=${encodeURIComponent(search)}`)}
-            >
-              <SearchIcon />
-            </IconButton>
-            <Typography variant="body2" color="text.secondary" sx={{ display: { xs: 'none', md: 'block' } }}>
-              {user?.name || user?.email}
-            </Typography>
-            <Button
-              size="small"
-              startIcon={<LogoutIcon />}
-              onClick={() => {
-                dispatch(logout());
-                navigate('/login');
-              }}
-            >
-              Logout
-            </Button>
+              <Button
+                size="small"
+                startIcon={<LogoutIcon />}
+                onClick={() => {
+                  dispatch(logout());
+                  navigate('/login');
+                }}
+              >
+                Logout
+              </Button>
+            </Box>
           </Toolbar>
         </AppBar>
         <Box sx={{ p: { xs: 1.5, sm: 2, md: 3 } }}>{children}</Box>

@@ -9,18 +9,18 @@ import { store } from './app/store';
 const theme = createTheme({
   palette: {
     mode: 'light',
-    primary: { main: '#0d6e6e' },
-    secondary: { main: '#ca8a04' },
+    primary: { main: '#1f8df0' },
+    secondary: { main: '#6c7a89' },
     background: {
-      default: '#eef3f7',
+      default: '#eef1f6',
       paper: '#ffffff'
     }
   },
   shape: {
-    borderRadius: 14
+    borderRadius: 12
   },
   typography: {
-    fontFamily: '"Plus Jakarta Sans", "Segoe UI", "Helvetica Neue", Arial, sans-serif',
+    fontFamily: '"Public Sans", "Segoe UI", "Helvetica Neue", Arial, sans-serif',
     h5: { fontWeight: 700, letterSpacing: -0.3 },
     h6: { fontWeight: 700, letterSpacing: -0.2 },
     subtitle1: { fontWeight: 650 }
@@ -29,16 +29,16 @@ const theme = createTheme({
     MuiCssBaseline: {
       styleOverrides: {
         body: {
-          background: 'radial-gradient(circle at top right, #d8eceb 0%, #eef3f7 45%, #f4f7fb 100%)'
+          backgroundColor: '#eef1f6'
         }
       }
     },
     MuiPaper: {
       styleOverrides: {
         root: {
-          borderRadius: 14,
-          border: '1px solid #d7e1ea',
-          boxShadow: '0 8px 22px rgba(13, 40, 60, 0.06)'
+          borderRadius: 12,
+          border: '1px solid #d8dee8',
+          boxShadow: '0 3px 10px rgba(30, 55, 90, 0.05)'
         }
       }
     },
@@ -62,8 +62,8 @@ const theme = createTheme({
       styleOverrides: {
         head: {
           fontWeight: 700,
-          color: '#32465a',
-          backgroundColor: '#f4f8fb'
+          color: '#334a66',
+          backgroundColor: '#f7f9fc'
         }
       }
     },
