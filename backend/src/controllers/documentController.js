@@ -32,6 +32,24 @@ function withExtension(fileName, mimeType) {
   return mimeExt ? `${name || 'document'}${mimeExt}` : name || 'document';
 }
 
+function sanitizeForPublicId(value) {
+  return String(value || '')
+    .trim()
+    .replace(/\s+/g, '-')
+    .replace(/[^a-zA-Z0-9._-]/g, '');
+}
+
+function buildPublicId(fileName, mimeType) {
+  const normalized = withExtension(fileName, mimeType);
+  const parsed = path.parse(normalized);
+  const base = sanitizeForPublicId(parsed.name) || 'document';
+  const ext = (parsed.ext || extensionFromMime(mimeType) || '').toLowerCase();
+  const suffix = `${Date.now()}-${Math.round(Math.random() * 1e6)}`;
+
+  // For raw assets, extension should be part of public_id so delivery URL preserves it.
+  return ext ? `${base}-${suffix}${ext}` : `${base}-${suffix}`;
+}
+
 const uploadDocuments = asyncHandler(async (req, res) => {
   const { rtiId, stageId, stageName } = req.body;
 
@@ -54,12 +72,16 @@ const uploadDocuments = asyncHandler(async (req, res) => {
   const safeStageFolder = normalizedStageName.replace(/[^a-zA-Z0-9-_]/g, '_');
 
   const uploadResults = await Promise.all(
-    req.files.map((file) =>
-      uploadBuffer(file, {
+    req.files.map((file) => {
+      const resourceType = getResourceType(file.mimetype);
+      return uploadBuffer(file, {
         folder: `rti-documents/${rtiId}/${safeStageFolder}`,
-        resource_type: getResourceType(file.mimetype)
+        resource_type: resourceType,
+        use_filename: false,
+        unique_filename: false,
+        public_id: buildPublicId(file.originalname, file.mimetype)
       })
-    )
+    })
   );
 
   const docs = uploadResults.map((result, index) => ({
