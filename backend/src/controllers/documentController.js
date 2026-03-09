@@ -44,7 +44,7 @@ function sanitizeForPublicId(value) {
     .replace(/[^a-zA-Z0-9._-]/g, '');
 }
 
-function buildPublicId(fileName, mimeType) {
+function buildPublicId(fileName, mimeType, resourceType) {
   const normalized = withExtension(fileName, mimeType);
   const parsed = path.parse(normalized);
   const base = sanitizeForPublicId(parsed.name) || 'document';
@@ -52,7 +52,12 @@ function buildPublicId(fileName, mimeType) {
   const suffix = `${Date.now()}-${Math.round(Math.random() * 1e6)}`;
 
   // For raw assets, extension should be part of public_id so delivery URL preserves it.
-  return ext ? `${base}-${suffix}${ext}` : `${base}-${suffix}`;
+  // For image assets (including PDFs uploaded as image), Cloudinary appends format automatically.
+  if (resourceType === 'raw') {
+    return ext ? `${base}-${suffix}${ext}` : `${base}-${suffix}`;
+  }
+
+  return `${base}-${suffix}`;
 }
 
 const uploadDocuments = asyncHandler(async (req, res) => {
@@ -84,7 +89,7 @@ const uploadDocuments = asyncHandler(async (req, res) => {
         resource_type: resourceType,
         use_filename: false,
         unique_filename: false,
-        public_id: buildPublicId(file.originalname, file.mimetype)
+        public_id: buildPublicId(file.originalname, file.mimetype, resourceType)
       })
     })
   );
