@@ -4,6 +4,10 @@ const Document = require('../models/Document');
 const asyncHandler = require('../utils/asyncHandler');
 const { destroyByPublicId, isConfigured, uploadBuffer } = require('../config/cloudinary');
 
+function getResourceType(mimeType) {
+  return String(mimeType || '').startsWith('image/') ? 'image' : 'raw';
+}
+
 const uploadDocuments = asyncHandler(async (req, res) => {
   const { rtiId, stageId, stageName } = req.body;
 
@@ -29,7 +33,7 @@ const uploadDocuments = asyncHandler(async (req, res) => {
     req.files.map((file) =>
       uploadBuffer(file, {
         folder: `rti-documents/${rtiId}/${safeStageFolder}`,
-        resource_type: 'auto'
+        resource_type: getResourceType(file.mimetype)
       })
     )
   );
@@ -42,7 +46,7 @@ const uploadDocuments = asyncHandler(async (req, res) => {
     filePath: result.secure_url,
     fileType: req.files[index].mimetype,
     cloudinaryPublicId: result.public_id,
-    cloudinaryResourceType: result.resource_type,
+    cloudinaryResourceType: result.resource_type || getResourceType(req.files[index].mimetype),
     uploadDate: new Date()
   }));
 
