@@ -1,3 +1,4 @@
+import { useEffect, useState } from 'react';
 import {
   Alert,
   Box,
@@ -11,6 +12,8 @@ import {
 } from '@mui/material';
 
 const modeOptions = ['Online', 'Speed Post', 'Registered Post', 'Hand Submission'];
+const DEPARTMENT_STORAGE_KEY = 'rti_department_options_v1';
+const defaultDepartments = ['Revenue', 'Endowment'];
 const statusOptions = [
   'RTI Filed',
   'PIO Response Received',
@@ -30,10 +33,72 @@ export default function RTIForm({
   submitError = '',
   submitting = false,
   disableSubmit = false,
+  secondaryActionLabel = '',
+  onSecondaryAction,
   showInitialUpload = false,
   initialFiles = [],
   onInitialFilesChange
 }) {
+  const [departmentOptions, setDepartmentOptions] = useState(() => {
+    try {
+      const stored = JSON.parse(localStorage.getItem(DEPARTMENT_STORAGE_KEY) || '[]');
+      if (Array.isArray(stored) && stored.length) {
+        return [...new Set([...defaultDepartments, ...stored])];
+      }
+    } catch (_error) {
+      // ignore invalid local storage data and fall back to defaults
+    }
+    return defaultDepartments;
+  });
+  const [departmentMode, setDepartmentMode] = useState('select');
+  const [customDepartment, setCustomDepartment] = useState('');
+
+  useEffect(() => {
+    localStorage.setItem(DEPARTMENT_STORAGE_KEY, JSON.stringify(departmentOptions));
+  }, [departmentOptions]);
+
+  useEffect(() => {
+    if (value.department && !departmentOptions.includes(value.department)) {
+      setDepartmentOptions((prev) => [...new Set([...prev, value.department])]);
+    }
+  }, [departmentOptions, value.department]);
+
+  function updateDepartment(valueToSet) {
+    onChange?.({
+      target: {
+        name: 'department',
+        value: valueToSet
+      }
+    });
+  }
+
+  function onDepartmentSelect(event) {
+    const selected = event.target.value;
+
+    if (selected === '__other__') {
+      setDepartmentMode('custom');
+      setCustomDepartment('');
+      updateDepartment('');
+      return;
+    }
+
+    setDepartmentMode('select');
+    setCustomDepartment('');
+    updateDepartment(selected);
+  }
+
+  function saveCustomDepartment() {
+    const normalized = customDepartment.trim();
+    if (!normalized) {
+      return;
+    }
+
+    setDepartmentOptions((prev) => [...new Set([...prev, normalized])]);
+    setDepartmentMode('select');
+    setCustomDepartment('');
+    updateDepartment(normalized);
+  }
+
   return (
     <Paper sx={{ p: 3, background: 'linear-gradient(180deg, #ffffff 0%, #f8fcfb 100%)' }}>
       <Typography variant="h6" mb={2}>
@@ -50,7 +115,49 @@ export default function RTIForm({
             <TextField fullWidth label="Applicant Name" name="applicantName" value={value.applicantName} onChange={onChange} required />
           </Grid2>
           <Grid2 size={{ xs: 12, md: 6 }}>
-            <TextField fullWidth label="Department" name="department" value={value.department} onChange={onChange} required />
+            {departmentMode === 'custom' ? (
+              <Stack spacing={1}>
+                <TextField
+                  fullWidth
+                  label="Department (Custom)"
+                  value={customDepartment}
+                  onChange={(event) => setCustomDepartment(event.target.value)}
+                  required
+                />
+                <Stack direction="row" spacing={1}>
+                  <Button type="button" variant="outlined" onClick={saveCustomDepartment}>
+                    Add Department
+                  </Button>
+                  <Button
+                    type="button"
+                    variant="text"
+                    onClick={() => {
+                      setDepartmentMode('select');
+                      setCustomDepartment('');
+                    }}
+                  >
+                    Cancel
+                  </Button>
+                </Stack>
+              </Stack>
+            ) : (
+              <TextField
+                select
+                fullWidth
+                label="Department"
+                name="department"
+                value={departmentOptions.includes(value.department) ? value.department : ''}
+                onChange={onDepartmentSelect}
+                required
+              >
+                {departmentOptions.map((option) => (
+                  <MenuItem key={option} value={option}>
+                    {option}
+                  </MenuItem>
+                ))}
+                <MenuItem value="__other__">Other</MenuItem>
+              </TextField>
+            )}
           </Grid2>
           <Grid2 size={12}>
             <TextField fullWidth label="Applicant Address" name="applicantAddress" value={value.applicantAddress} onChange={onChange} multiline rows={2} required />
@@ -118,7 +225,12 @@ export default function RTIForm({
           )}
         </Grid2>
 
-        <Stack direction="row" justifyContent="flex-end" mt={2}>
+        <Stack direction="row" justifyContent="flex-end" spacing={1} mt={2}>
+          {!!secondaryActionLabel && (
+            <Button type="button" variant="outlined" onClick={onSecondaryAction}>
+              {secondaryActionLabel}
+            </Button>
+          )}
           <Button type="submit" variant="contained" disabled={submitting || disableSubmit}>
             {submitting ? 'Saving...' : submitLabel}
           </Button>

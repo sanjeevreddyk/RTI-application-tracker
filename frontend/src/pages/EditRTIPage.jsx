@@ -54,7 +54,14 @@ export default function EditRTIPage() {
   return (
     <Stack spacing={2}>
       <Typography variant="h5" fontWeight={700}>Edit RTI Application</Typography>
-      <RTIForm value={form} onChange={onChange} onSubmit={onSubmit} submitLabel="Update RTI" />
+      <RTIForm
+        value={form}
+        onChange={onChange}
+        onSubmit={onSubmit}
+        submitLabel="Update RTI"
+        secondaryActionLabel="Back"
+        onSecondaryAction={() => navigate(`/rtis/${id}`)}
+      />
     </Stack>
   );
 }

@@ -1,8 +1,12 @@
+const BUFFER_DAYS = 10;
+
 function computeDeadlines(applicationDate, firstAppealOrderDate) {
   const appDate = applicationDate ? new Date(applicationDate) : null;
-  const pioDeadline = appDate ? addDays(appDate, 30) : null;
+  const pioDeadline = appDate ? addDays(appDate, 30 + BUFFER_DAYS) : null;
   const firstAppealEligibleOn = pioDeadline;
-  const secondAppealEligibleOn = firstAppealOrderDate ? addDays(new Date(firstAppealOrderDate), 90) : null;
+  const secondAppealEligibleOn = firstAppealOrderDate
+    ? addDays(new Date(firstAppealOrderDate), 90 + BUFFER_DAYS)
+    : null;
 
   return {
     pioDeadline,
