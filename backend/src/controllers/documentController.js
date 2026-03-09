@@ -6,7 +6,7 @@ const { destroyByPublicId, isConfigured, uploadBuffer } = require('../config/clo
 
 function getResourceType(mimeType) {
   const type = String(mimeType || '');
-  if (type.startsWith('image/') || type === 'application/pdf') {
+  if (type.startsWith('image/')) {
     return 'image';
   }
 
