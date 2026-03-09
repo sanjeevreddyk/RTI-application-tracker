@@ -5,7 +5,12 @@ const asyncHandler = require('../utils/asyncHandler');
 const { destroyByPublicId, isConfigured, uploadBuffer } = require('../config/cloudinary');
 
 function getResourceType(mimeType) {
-  return String(mimeType || '').startsWith('image/') ? 'image' : 'raw';
+  const type = String(mimeType || '');
+  if (type.startsWith('image/') || type === 'application/pdf') {
+    return 'image';
+  }
+
+  return 'raw';
 }
 
 function extensionFromMime(mimeType) {
