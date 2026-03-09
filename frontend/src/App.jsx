@@ -2,6 +2,7 @@ import { useEffect } from 'react';
 import { Navigate, Route, Routes } from 'react-router-dom';
 import { useDispatch, useSelector } from 'react-redux';
 import AppLayout from './components/AppLayout';
+import GlobalLoader from './components/GlobalLoader';
 import DashboardPage from './pages/DashboardPage';
 import RTIListPage from './pages/RTIListPage';
 import AddRTIPage from './pages/AddRTIPage';
@@ -24,26 +25,32 @@ export default function App() {
 
   if (!token) {
     return (
-      <Routes>
-        <Route path="/login" element={<LoginPage />} />
-        <Route path="*" element={<Navigate to="/login" replace />} />
-      </Routes>
+      <>
+        <GlobalLoader />
+        <Routes>
+          <Route path="/login" element={<LoginPage />} />
+          <Route path="*" element={<Navigate to="/login" replace />} />
+        </Routes>
+      </>
     );
   }
 
   return (
-    <AppLayout>
-      <Routes>
-        <Route path="/" element={<Navigate to="/dashboard" replace />} />
-        <Route path="/login" element={<Navigate to="/dashboard" replace />} />
-        <Route path="/dashboard" element={<DashboardPage />} />
-        <Route path="/rtis" element={<RTIListPage />} />
-        <Route path="/rtis/add" element={<AddRTIPage />} />
-        <Route path="/rtis/:id" element={<RTIDetailsPage />} />
-        <Route path="/rtis/:id/edit" element={<EditRTIPage />} />
-        <Route path="/analytics" element={<AnalyticsPage />} />
-        <Route path="/calendar" element={<CalendarPage />} />
-      </Routes>
-    </AppLayout>
+    <>
+      <GlobalLoader />
+      <AppLayout>
+        <Routes>
+          <Route path="/" element={<Navigate to="/dashboard" replace />} />
+          <Route path="/login" element={<Navigate to="/dashboard" replace />} />
+          <Route path="/dashboard" element={<DashboardPage />} />
+          <Route path="/rtis" element={<RTIListPage />} />
+          <Route path="/rtis/add" element={<AddRTIPage />} />
+          <Route path="/rtis/:id" element={<RTIDetailsPage />} />
+          <Route path="/rtis/:id/edit" element={<EditRTIPage />} />
+          <Route path="/analytics" element={<AnalyticsPage />} />
+          <Route path="/calendar" element={<CalendarPage />} />
+        </Routes>
+      </AppLayout>
+    </>
   );
 }

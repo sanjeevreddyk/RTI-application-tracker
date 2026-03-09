@@ -87,6 +87,7 @@ const initialState = {
   stages: [],
   documents: [],
   notes: [],
+  pendingCount: 0,
   loading: false,
   error: null
 };
@@ -103,55 +104,67 @@ const rtiSlice = createSlice({
     }
   },
   extraReducers: (builder) => {
-    builder
-      .addCase(fetchRtis.pending, (state) => {
+    builder.addCase(fetchRtis.pending, (state) => {
+      state.error = null;
+    });
+    builder.addCase(fetchRtis.fulfilled, (state, action) => {
+      state.list = action.payload;
+    });
+    builder.addCase(fetchRtis.rejected, (state, action) => {
+      state.error = action.error.message;
+    });
+    builder.addCase(fetchRtiById.fulfilled, (state, action) => {
+      state.selected = action.payload;
+    });
+    builder.addCase(fetchStages.fulfilled, (state, action) => {
+      state.stages = action.payload;
+    });
+    builder.addCase(addStage.fulfilled, (state, action) => {
+      state.stages.push(action.payload);
+    });
+    builder.addCase(fetchDocuments.fulfilled, (state, action) => {
+      state.documents = action.payload;
+    });
+    builder.addCase(uploadDocuments.fulfilled, (state, action) => {
+      state.documents = [...action.payload, ...state.documents];
+    });
+    builder.addCase(removeDocument.fulfilled, (state, action) => {
+      state.documents = state.documents.filter((doc) => doc._id !== action.payload);
+    });
+    builder.addCase(fetchNotes.fulfilled, (state, action) => {
+      state.notes = action.payload;
+    });
+    builder.addCase(addNote.fulfilled, (state, action) => {
+      state.notes = [action.payload, ...state.notes];
+    });
+    builder.addCase(createRti.fulfilled, (state, action) => {
+      state.list = [action.payload, ...state.list];
+    });
+    builder.addCase(updateRti.fulfilled, (state, action) => {
+      state.list = state.list.map((item) => (item._id === action.payload._id ? action.payload : item));
+      if (state.selected && state.selected._id === action.payload._id) {
+        state.selected = { ...state.selected, ...action.payload };
+      }
+    });
+    builder.addCase(deleteRti.fulfilled, (state, action) => {
+      state.list = state.list.filter((item) => item._id !== action.payload);
+    });
+    builder.addMatcher(
+      (action) => action.type.startsWith('rti/') && action.type.endsWith('/pending'),
+      (state) => {
+        state.pendingCount += 1;
         state.loading = true;
-        state.error = null;
-      })
-      .addCase(fetchRtis.fulfilled, (state, action) => {
-        state.loading = false;
-        state.list = action.payload;
-      })
-      .addCase(fetchRtis.rejected, (state, action) => {
-        state.loading = false;
-        state.error = action.error.message;
-      })
-      .addCase(fetchRtiById.fulfilled, (state, action) => {
-        state.selected = action.payload;
-      })
-      .addCase(fetchStages.fulfilled, (state, action) => {
-        state.stages = action.payload;
-      })
-      .addCase(addStage.fulfilled, (state, action) => {
-        state.stages.push(action.payload);
-      })
-      .addCase(fetchDocuments.fulfilled, (state, action) => {
-        state.documents = action.payload;
-      })
-      .addCase(uploadDocuments.fulfilled, (state, action) => {
-        state.documents = [...action.payload, ...state.documents];
-      })
-      .addCase(removeDocument.fulfilled, (state, action) => {
-        state.documents = state.documents.filter((doc) => doc._id !== action.payload);
-      })
-      .addCase(fetchNotes.fulfilled, (state, action) => {
-        state.notes = action.payload;
-      })
-      .addCase(addNote.fulfilled, (state, action) => {
-        state.notes = [action.payload, ...state.notes];
-      })
-      .addCase(createRti.fulfilled, (state, action) => {
-        state.list = [action.payload, ...state.list];
-      })
-      .addCase(updateRti.fulfilled, (state, action) => {
-        state.list = state.list.map((item) => (item._id === action.payload._id ? action.payload : item));
-        if (state.selected?._id === action.payload._id) {
-          state.selected = { ...state.selected, ...action.payload };
-        }
-      })
-      .addCase(deleteRti.fulfilled, (state, action) => {
-        state.list = state.list.filter((item) => item._id !== action.payload);
-      });
+      }
+    );
+    builder.addMatcher(
+      (action) =>
+        action.type.startsWith('rti/') &&
+        (action.type.endsWith('/fulfilled') || action.type.endsWith('/rejected')),
+      (state) => {
+        state.pendingCount = Math.max(0, state.pendingCount - 1);
+        state.loading = state.pendingCount > 0;
+      }
+    );
   }
 });
 
