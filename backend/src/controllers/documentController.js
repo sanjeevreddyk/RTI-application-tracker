@@ -8,6 +8,30 @@ function getResourceType(mimeType) {
   return String(mimeType || '').startsWith('image/') ? 'image' : 'raw';
 }
 
+function extensionFromMime(mimeType) {
+  const map = {
+    'application/pdf': '.pdf',
+    'application/msword': '.doc',
+    'application/vnd.openxmlformats-officedocument.wordprocessingml.document': '.docx',
+    'image/png': '.png',
+    'image/jpeg': '.jpg',
+    'image/jpg': '.jpg',
+    'image/webp': '.webp'
+  };
+  return map[mimeType] || '';
+}
+
+function withExtension(fileName, mimeType) {
+  const name = String(fileName || '').trim();
+  const ext = path.extname(name);
+  if (ext) {
+    return name;
+  }
+
+  const mimeExt = extensionFromMime(mimeType);
+  return mimeExt ? `${name || 'document'}${mimeExt}` : name || 'document';
+}
+
 const uploadDocuments = asyncHandler(async (req, res) => {
   const { rtiId, stageId, stageName } = req.body;
 
@@ -42,7 +66,7 @@ const uploadDocuments = asyncHandler(async (req, res) => {
     rtiId,
     stageId: stageId || null,
     stageName: normalizedStageName,
-    fileName: req.files[index].originalname,
+    fileName: withExtension(req.files[index].originalname, req.files[index].mimetype),
     filePath: result.secure_url,
     fileType: req.files[index].mimetype,
     cloudinaryPublicId: result.public_id,
