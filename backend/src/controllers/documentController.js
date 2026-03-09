@@ -2,6 +2,7 @@ const fs = require('fs');
 const path = require('path');
 const Document = require('../models/Document');
 const asyncHandler = require('../utils/asyncHandler');
+const { destroyByPublicId, isConfigured, uploadBuffer } = require('../config/cloudinary');
 
 const uploadDocuments = asyncHandler(async (req, res) => {
   const { rtiId, stageId, stageName } = req.body;
@@ -16,13 +17,32 @@ const uploadDocuments = asyncHandler(async (req, res) => {
     throw new Error('At least one file is required');
   }
 
-  const docs = req.files.map((file) => ({
+  if (!isConfigured()) {
+    res.status(500);
+    throw new Error('Cloudinary is not configured. Set CLOUDINARY_URL or cloudinary key env vars.');
+  }
+
+  const normalizedStageName = (stageName || 'General').trim();
+  const safeStageFolder = normalizedStageName.replace(/[^a-zA-Z0-9-_]/g, '_');
+
+  const uploadResults = await Promise.all(
+    req.files.map((file) =>
+      uploadBuffer(file, {
+        folder: `rti-documents/${rtiId}/${safeStageFolder}`,
+        resource_type: 'auto'
+      })
+    )
+  );
+
+  const docs = uploadResults.map((result, index) => ({
     rtiId,
     stageId: stageId || null,
-    stageName: stageName || 'General',
-    fileName: file.originalname,
-    filePath: `/uploads/${file.filename}`,
-    fileType: file.mimetype,
+    stageName: normalizedStageName,
+    fileName: req.files[index].originalname,
+    filePath: result.secure_url,
+    fileType: req.files[index].mimetype,
+    cloudinaryPublicId: result.public_id,
+    cloudinaryResourceType: result.resource_type,
     uploadDate: new Date()
   }));
 
@@ -43,9 +63,17 @@ const deleteDocument = asyncHandler(async (req, res) => {
     throw new Error('Document not found');
   }
 
-  const absolutePath = path.join(process.cwd(), doc.filePath.replace(/^\//, ''));
-  if (fs.existsSync(absolutePath)) {
-    fs.unlinkSync(absolutePath);
+  if (doc.cloudinaryPublicId) {
+    try {
+      await destroyByPublicId(doc.cloudinaryPublicId, doc.cloudinaryResourceType || 'image');
+    } catch (_error) {
+      // do not block delete in DB if remote cleanup fails
+    }
+  } else {
+    const absolutePath = path.join(process.cwd(), String(doc.filePath || '').replace(/^\//, ''));
+    if (fs.existsSync(absolutePath)) {
+      fs.unlinkSync(absolutePath);
+    }
   }
 
   await doc.deleteOne();

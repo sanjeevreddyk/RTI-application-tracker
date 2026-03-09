@@ -49,7 +49,7 @@ Copy `backend/.env.example` to `.env`.
 ```env
 PORT=5000
 MONGO_URI=mongodb://127.0.0.1:27017/rti_case_management
-CLIENT_URL=http://localhost:5173
+CLIENT_URL=http://localhost:5173`nJWT_SECRET=change_this_to_a_long_random_secret`nCLOUDINARY_URL=cloudinary://<api_key>:<api_secret>@<cloud_name>
 JWT_SECRET=change_this_to_a_long_random_secret
 ```
 

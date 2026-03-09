@@ -6,6 +6,7 @@ const Document = require('../models/Document');
 const Note = require('../models/Note');
 const asyncHandler = require('../utils/asyncHandler');
 const { computeDeadlines, getDeadlineStatus } = require('../utils/deadline');
+const { destroyByPublicId } = require('../config/cloudinary');
 
 const buildFilters = (query) => {
   const filters = {};
@@ -145,7 +146,12 @@ const deleteRti = asyncHandler(async (req, res) => {
   const docs = await Document.find({ rtiId: rti._id });
 
   docs.forEach((doc) => {
-    const fullPath = path.join(process.cwd(), doc.filePath.replace(/^\//, ''));
+    if (doc.cloudinaryPublicId) {
+      destroyByPublicId(doc.cloudinaryPublicId, doc.cloudinaryResourceType || 'image').catch(() => {});
+      return;
+    }
+
+    const fullPath = path.join(process.cwd(), String(doc.filePath || '').replace(/^\//, ''));
     if (fs.existsSync(fullPath)) {
       fs.unlinkSync(fullPath);
     }

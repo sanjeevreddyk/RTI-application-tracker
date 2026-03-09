@@ -1,5 +1,4 @@
 const multer = require('multer');
-const path = require('path');
 
 const allowedTypes = [
   'application/pdf',
@@ -11,18 +10,8 @@ const allowedTypes = [
   'image/webp'
 ];
 
-const storage = multer.diskStorage({
-  destination: (_req, _file, cb) => {
-    cb(null, path.join(process.cwd(), 'uploads'));
-  },
-  filename: (_req, file, cb) => {
-    const ext = path.extname(file.originalname);
-    cb(null, `${Date.now()}-${Math.round(Math.random() * 1e9)}${ext}`);
-  }
-});
-
 const upload = multer({
-  storage,
+  storage: multer.memoryStorage(),
   limits: { fileSize: 20 * 1024 * 1024 },
   fileFilter: (_req, file, cb) => {
     if (!allowedTypes.includes(file.mimetype)) {

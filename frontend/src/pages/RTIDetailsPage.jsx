@@ -81,6 +81,13 @@ export default function RTIDetailsPage() {
 
   const pioChip = useMemo(() => deadlineChip(selected?.deadlines?.pioDeadlineStatus), [selected]);
   const stageOptions = useMemo(() => ['General', ...stageNames], []);
+  const resolveDocumentUrl = (filePath) => {
+    if (!filePath) {
+      return '#';
+    }
+
+    return /^https?:\/\//i.test(filePath) ? filePath : `${fileBaseUrl}${filePath}`;
+  };
   const documentsByStage = useMemo(() => {
     const grouped = {};
     documents.forEach((doc) => {
@@ -303,10 +310,10 @@ export default function RTIDetailsPage() {
                               <TableCell>{formatDate(doc.uploadDate)}</TableCell>
                               <TableCell>
                                 <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1}>
-                                  <Link href={`${fileBaseUrl}${doc.filePath}`} target="_blank" rel="noreferrer">
+                                  <Link href={resolveDocumentUrl(doc.filePath)} target="_blank" rel="noreferrer">
                                     Preview
                                   </Link>
-                                  <Link href={`${fileBaseUrl}${doc.filePath}`} download>
+                                  <Link href={resolveDocumentUrl(doc.filePath)} download>
                                     Download
                                   </Link>
                                   <Button color="error" size="small" onClick={() => dispatch(removeDocument(doc._id))}>
