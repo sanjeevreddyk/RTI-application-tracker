@@ -19,7 +19,9 @@ const stageSchema = new mongoose.Schema(
     description: { type: String, trim: true },
     postalTrackingNumber: { type: String, trim: true },
     firstAppealAuthority: { type: String, trim: true },
-    secondAppealAuthority: { type: String, trim: true }
+    firstAppealAuthorityAddress: { type: String, trim: true },
+    secondAppealAuthority: { type: String, trim: true },
+    secondAppealAuthorityAddress: { type: String, trim: true }
   },
   { timestamps: true }
 );

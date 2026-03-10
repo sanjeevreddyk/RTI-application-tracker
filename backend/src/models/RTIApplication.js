@@ -17,6 +17,7 @@ const rtiApplicationSchema = new mongoose.Schema(
     applicantAddress: { type: String, trim: true },
     department: { type: String, required: true, trim: true, index: true },
     pioName: { type: String, trim: true },
+    pioAddress: { type: String, trim: true },
     subject: { type: String, required: true, trim: true, index: true },
     rtiNumber: { type: String, required: true, trim: true, unique: true, index: true },
     applicationDate: { type: Date, required: true },

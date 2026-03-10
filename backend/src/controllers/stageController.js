@@ -10,7 +10,9 @@ const createStage = asyncHandler(async (req, res) => {
     description,
     postalTrackingNumber,
     firstAppealAuthority,
-    secondAppealAuthority
+    firstAppealAuthorityAddress,
+    secondAppealAuthority,
+    secondAppealAuthorityAddress
   } = req.body;
 
   const rti = await RTIApplication.findById(rtiId);
@@ -32,7 +34,11 @@ const createStage = asyncHandler(async (req, res) => {
       description,
       postalTrackingNumber: postalTrackingNumber || '',
       firstAppealAuthority: stageName === 'First Appeal Filed' ? firstAppealAuthority || '' : '',
-      secondAppealAuthority: stageName === 'Second Appeal Filed' ? secondAppealAuthority || '' : ''
+      firstAppealAuthorityAddress:
+        stageName === 'First Appeal Filed' ? firstAppealAuthorityAddress || '' : '',
+      secondAppealAuthority: stageName === 'Second Appeal Filed' ? secondAppealAuthority || '' : '',
+      secondAppealAuthorityAddress:
+        stageName === 'Second Appeal Filed' ? secondAppealAuthorityAddress || '' : ''
     },
     { new: true, upsert: true, runValidators: true, setDefaultsOnInsert: true, sort: { updatedAt: -1 } }
   );

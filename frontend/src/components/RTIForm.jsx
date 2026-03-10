@@ -165,6 +165,18 @@ export default function RTIForm({
           <Grid2 size={{ xs: 12, md: 6 }}>
             <TextField fullWidth label="Public Information Officer" name="pioName" value={value.pioName} onChange={onChange} required />
           </Grid2>
+          <Grid2 size={12}>
+            <TextField
+              fullWidth
+              label="Public Information Officer Address"
+              name="pioAddress"
+              value={value.pioAddress || ''}
+              onChange={onChange}
+              multiline
+              rows={2}
+              required
+            />
+          </Grid2>
           <Grid2 size={{ xs: 12, md: 6 }}>
             <TextField fullWidth label="RTI Subject" name="subject" value={value.subject} onChange={onChange} required />
           </Grid2>

@@ -10,6 +10,7 @@ const empty = {
   applicantAddress: '',
   department: '',
   pioName: '',
+  pioAddress: '',
   subject: '',
   rtiNumber: '',
   applicationDate: '',
