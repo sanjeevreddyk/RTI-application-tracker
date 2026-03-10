@@ -30,6 +30,32 @@ import { deadlineChip, formatDate } from '../utils/date';
 
 const statusOptions = ['', 'RTI Filed', 'PIO Response Received', 'First Appeal Filed', 'First Appeal Order Received', 'Second Appeal Filed', 'Second Appeal Hearing', 'Second Appeal Order', 'Case Closed'];
 
+function statusChipColor(status) {
+  if (status === 'Case Closed') {
+    return 'success';
+  }
+
+  if (status === 'PIO Response Received' || status === 'Second Appeal Order') {
+    return 'info';
+  }
+
+  if (
+    status === 'First Appeal Filed' ||
+    status === 'First Appeal Order Received' ||
+    status === 'Second Appeal Filed' ||
+    status === 'Second Appeal Hearing'
+  ) {
+    return 'warning';
+  }
+
+  return 'default';
+}
+
+function deadlineChipColor(deadlineStatus) {
+  const info = deadlineChip(deadlineStatus);
+  return info.color;
+}
+
 export default function RTIListPage() {
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down('md'));
@@ -199,10 +225,16 @@ export default function RTIListPage() {
                   <Typography variant="body2">{item.subject}</Typography>
                   <Typography variant="caption" color="text.secondary">{item.department}</Typography>
                   <Typography variant="caption">Filed: {formatDate(item.applicationDate)}</Typography>
-                  <Typography variant="caption">Status: {item.status}</Typography>
+                  <Stack direction="row" spacing={1} alignItems="center">
+                    <Typography variant="caption">Status:</Typography>
+                    <Chip size="small" variant="outlined" color={statusChipColor(item.status)} label={item.status} />
+                  </Stack>
                   <Stack direction="row" spacing={1} alignItems="center" flexWrap="wrap">
-                    <Typography variant="caption">PIO: {formatDate(item.deadlines?.pioDeadline)}</Typography>
-                    <Chip size="small" color={chipData.color} label={chipData.label} />
+                    <Typography variant="caption">PIO Deadline:</Typography>
+                    <Typography variant="caption" fontWeight={600}>
+                      {formatDate(item.deadlines?.pioDeadline)}
+                    </Typography>
+                    <Chip size="small" color={deadlineChipColor(item.deadlines?.pioDeadlineStatus)} label={chipData.label} />
                   </Stack>
                   <Stack direction="row" spacing={1} flexWrap="wrap">
                     <Button size="small" component={Link} to={`/rtis/${item._id}`}>View</Button>
@@ -288,11 +320,15 @@ export default function RTIListPage() {
                       <TableCell>{item.subject}</TableCell>
                       <TableCell>{item.department}</TableCell>
                       <TableCell>{formatDate(item.applicationDate)}</TableCell>
-                      <TableCell>{item.status}</TableCell>
+                      <TableCell>
+                        <Chip size="small" variant="outlined" color={statusChipColor(item.status)} label={item.status} />
+                      </TableCell>
                       <TableCell>
                         <Stack direction="row" spacing={1} alignItems="center">
-                          <span>{formatDate(item.deadlines?.pioDeadline)}</span>
-                          <Chip size="small" color={chipData.color} label={chipData.label} />
+                          <Typography variant="body2" fontWeight={600}>
+                            {formatDate(item.deadlines?.pioDeadline)}
+                          </Typography>
+                          <Chip size="small" color={deadlineChipColor(item.deadlines?.pioDeadlineStatus)} label={chipData.label} />
                         </Stack>
                       </TableCell>
                       <TableCell>
