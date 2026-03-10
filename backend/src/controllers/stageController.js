@@ -11,7 +11,17 @@ const createStage = asyncHandler(async (req, res) => {
     throw new Error('RTI not found');
   }
 
-  const stage = await Stage.create({ rtiId, stageName, stageDate, description });
+  if (!stageDate) {
+    res.status(400);
+    throw new Error('stageDate is required');
+  }
+
+  // Keep one record per stage name for each RTI case so edited dates overwrite old values.
+  const stage = await Stage.findOneAndUpdate(
+    { rtiId, stageName },
+    { stageDate, description },
+    { new: true, upsert: true, runValidators: true, setDefaultsOnInsert: true, sort: { updatedAt: -1 } }
+  );
 
   const stageToStatusMap = {
     'RTI Filed': 'RTI Filed',
@@ -33,8 +43,27 @@ const createStage = asyncHandler(async (req, res) => {
 });
 
 const getStagesByRti = asyncHandler(async (req, res) => {
-  const stages = await Stage.find({ rtiId: req.params.rtiId }).sort({ stageDate: 1 });
-  res.json(stages);
+  const stages = await Stage.find({ rtiId: req.params.rtiId }).lean();
+  const latestByStage = new Map();
+
+  stages.forEach((stage) => {
+    const key = stage.stageName;
+    const existing = latestByStage.get(key);
+    const currentUpdatedAt = new Date(stage.updatedAt || stage.createdAt || 0).getTime();
+    const existingUpdatedAt = existing
+      ? new Date(existing.updatedAt || existing.createdAt || 0).getTime()
+      : -1;
+
+    if (!existing || currentUpdatedAt >= existingUpdatedAt) {
+      latestByStage.set(key, stage);
+    }
+  });
+
+  const dedupedStages = Array.from(latestByStage.values()).sort(
+    (a, b) => new Date(a.stageDate).getTime() - new Date(b.stageDate).getTime()
+  );
+
+  res.json(dedupedStages);
 });
 
 module.exports = {
