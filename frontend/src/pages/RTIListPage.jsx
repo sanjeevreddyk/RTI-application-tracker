@@ -13,6 +13,7 @@ import {
   TableHead,
   TableRow,
   TableContainer,
+  TableSortLabel,
   TextField,
   Typography,
   useMediaQuery,
@@ -37,6 +38,8 @@ export default function RTIListPage() {
   const [status, setStatus] = useState(() => initialParams.get('status') || '');
   const [department, setDepartment] = useState(() => initialParams.get('department') || '');
   const [overdue, setOverdue] = useState(() => initialParams.get('overdue') || '');
+  const [sortBy, setSortBy] = useState('applicationDate');
+  const [sortDir, setSortDir] = useState('desc');
 
   const query = useMemo(
     () => ({ search, year, status, department, overdue }),
@@ -51,6 +54,44 @@ export default function RTIListPage() {
       (item) => item.status === 'RTI Filed' && item.deadlines?.pioDeadlineStatus === 'overdue'
     );
   }, [list, overdue]);
+  const sortedDisplayList = useMemo(() => {
+    const rows = [...displayList];
+    rows.sort((a, b) => {
+      const getValue = (item) => {
+        if (sortBy === 'applicationDate') {
+          return new Date(item.applicationDate || 0).getTime();
+        }
+
+        if (sortBy === 'pioDeadline') {
+          return new Date(item.deadlines?.pioDeadline || 0).getTime();
+        }
+
+        return String(item[sortBy] || '').toLowerCase();
+      };
+
+      const av = getValue(a);
+      const bv = getValue(b);
+
+      if (av < bv) {
+        return sortDir === 'asc' ? -1 : 1;
+      }
+      if (av > bv) {
+        return sortDir === 'asc' ? 1 : -1;
+      }
+      return 0;
+    });
+    return rows;
+  }, [displayList, sortBy, sortDir]);
+
+  function handleSort(column) {
+    if (sortBy === column) {
+      setSortDir((prev) => (prev === 'asc' ? 'desc' : 'asc'));
+      return;
+    }
+
+    setSortBy(column);
+    setSortDir('asc');
+  }
 
   useEffect(() => {
     const params = new URLSearchParams(location.search);
@@ -101,7 +142,7 @@ export default function RTIListPage() {
 
       {isMobile ? (
         <Stack spacing={1.25}>
-          {!loading && displayList.map((item) => {
+          {!loading && sortedDisplayList.map((item) => {
             const chipData = deadlineChip(item.deadlines?.pioDeadlineStatus);
             return (
               <Paper key={item._id} sx={{ p: 1.5 }}>
@@ -133,17 +174,65 @@ export default function RTIListPage() {
             <Table size="small">
               <TableHead>
                 <TableRow>
-                  <TableCell>RTI Number</TableCell>
-                  <TableCell>Subject</TableCell>
-                  <TableCell>Department</TableCell>
-                  <TableCell>Date</TableCell>
-                  <TableCell>Status</TableCell>
-                  <TableCell>PIO Deadline</TableCell>
+                  <TableCell sortDirection={sortBy === 'rtiNumber' ? sortDir : false}>
+                    <TableSortLabel
+                      active={sortBy === 'rtiNumber'}
+                      direction={sortBy === 'rtiNumber' ? sortDir : 'asc'}
+                      onClick={() => handleSort('rtiNumber')}
+                    >
+                      RTI Number
+                    </TableSortLabel>
+                  </TableCell>
+                  <TableCell sortDirection={sortBy === 'subject' ? sortDir : false}>
+                    <TableSortLabel
+                      active={sortBy === 'subject'}
+                      direction={sortBy === 'subject' ? sortDir : 'asc'}
+                      onClick={() => handleSort('subject')}
+                    >
+                      Subject
+                    </TableSortLabel>
+                  </TableCell>
+                  <TableCell sortDirection={sortBy === 'department' ? sortDir : false}>
+                    <TableSortLabel
+                      active={sortBy === 'department'}
+                      direction={sortBy === 'department' ? sortDir : 'asc'}
+                      onClick={() => handleSort('department')}
+                    >
+                      Department
+                    </TableSortLabel>
+                  </TableCell>
+                  <TableCell sortDirection={sortBy === 'applicationDate' ? sortDir : false}>
+                    <TableSortLabel
+                      active={sortBy === 'applicationDate'}
+                      direction={sortBy === 'applicationDate' ? sortDir : 'asc'}
+                      onClick={() => handleSort('applicationDate')}
+                    >
+                      Date
+                    </TableSortLabel>
+                  </TableCell>
+                  <TableCell sortDirection={sortBy === 'status' ? sortDir : false}>
+                    <TableSortLabel
+                      active={sortBy === 'status'}
+                      direction={sortBy === 'status' ? sortDir : 'asc'}
+                      onClick={() => handleSort('status')}
+                    >
+                      Status
+                    </TableSortLabel>
+                  </TableCell>
+                  <TableCell sortDirection={sortBy === 'pioDeadline' ? sortDir : false}>
+                    <TableSortLabel
+                      active={sortBy === 'pioDeadline'}
+                      direction={sortBy === 'pioDeadline' ? sortDir : 'asc'}
+                      onClick={() => handleSort('pioDeadline')}
+                    >
+                      PIO Deadline
+                    </TableSortLabel>
+                  </TableCell>
                   <TableCell>Actions</TableCell>
                 </TableRow>
               </TableHead>
               <TableBody>
-                {!loading && displayList.map((item) => {
+                {!loading && sortedDisplayList.map((item) => {
                   const chipData = deadlineChip(item.deadlines?.pioDeadlineStatus);
                   return (
                     <TableRow key={item._id} hover>
