@@ -50,6 +50,8 @@ const stageNames = [
   'Case Closed'
 ];
 const trackingStages = new Set(['First Appeal Filed', 'Second Appeal Filed']);
+const firstAppealStage = 'First Appeal Filed';
+const secondAppealStage = 'Second Appeal Filed';
 
 function getTodayDate() {
   const now = new Date();
@@ -66,7 +68,9 @@ export default function RTIDetailsPage() {
     stageName: 'PIO Response Received',
     stageDate: getTodayDate(),
     description: '',
-    postalTrackingNumber: ''
+    postalTrackingNumber: '',
+    firstAppealAuthority: '',
+    secondAppealAuthority: ''
   });
   const [stageFiles, setStageFiles] = useState([]);
   const [noteForm, setNoteForm] = useState({ noteText: '', author: 'System User' });
@@ -143,12 +147,24 @@ export default function RTIDetailsPage() {
     return map;
   }, [stages]);
   const showStagePostalTracking = trackingStages.has(stageForm.stageName);
+  const showFirstAppealAuthority = stageForm.stageName === firstAppealStage;
+  const showSecondAppealAuthority = stageForm.stageName === secondAppealStage;
   const isCaseClosedStage = stageForm.stageName === 'Case Closed';
   const isStageFormValid = Boolean(
     stageForm.stageName?.trim() &&
       stageForm.stageDate &&
+      (!showFirstAppealAuthority || stageForm.firstAppealAuthority?.trim()) &&
+      (!showSecondAppealAuthority || stageForm.secondAppealAuthority?.trim()) &&
       (isCaseClosedStage || stageFiles.length > 0)
   );
+  const firstAppealAuthority = useMemo(() => {
+    const stage = stages.find((item) => item.stageName === firstAppealStage);
+    return stage?.firstAppealAuthority || '-';
+  }, [stages]);
+  const secondAppealAuthority = useMemo(() => {
+    const stage = stages.find((item) => item.stageName === secondAppealStage);
+    return stage?.secondAppealAuthority || '-';
+  }, [stages]);
 
   const resolveDocumentStageDate = (doc) => {
     if (doc?.stageId && stageDateById.has(String(doc.stageId))) {
@@ -197,6 +213,16 @@ export default function RTIDetailsPage() {
       return;
     }
 
+    if (showFirstAppealAuthority && !stageForm.firstAppealAuthority?.trim()) {
+      setStageSubmitError('First Appellate Authority is required for first appeal stage.');
+      return;
+    }
+
+    if (showSecondAppealAuthority && !stageForm.secondAppealAuthority?.trim()) {
+      setStageSubmitError('Second Appellate Authority is required for second appeal stage.');
+      return;
+    }
+
     if (!isCaseClosedStage && !stageFiles.length) {
       setStageSubmitError('Please upload at least one document for this stage.');
       return;
@@ -221,7 +247,9 @@ export default function RTIDetailsPage() {
         stageName: 'PIO Response Received',
         stageDate: getTodayDate(),
         description: '',
-        postalTrackingNumber: ''
+        postalTrackingNumber: '',
+        firstAppealAuthority: '',
+        secondAppealAuthority: ''
       });
       setStageFiles([]);
       dispatch(fetchRtiById(id));
@@ -264,6 +292,12 @@ export default function RTIDetailsPage() {
           <Typography variant="body2" color="text.secondary">
             Postal Tracking Number: {selected.postalTrackingNumber || '-'}
           </Typography>
+          <Typography variant="body2" color="text.secondary">
+            First Appellate Authority: {firstAppealAuthority}
+          </Typography>
+          <Typography variant="body2" color="text.secondary">
+            Second Appellate Authority: {secondAppealAuthority}
+          </Typography>
           <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1} mt={1}>
             <Chip label={`Status: ${selected.status}`} />
             <Chip label={`PIO Deadline: ${formatDate(selected.deadlines?.pioDeadline)}`} color={pioChip.color} />
@@ -293,7 +327,9 @@ export default function RTIDetailsPage() {
                     setStageForm((p) => ({
                       ...p,
                       stageName: e.target.value,
-                      postalTrackingNumber: trackingStages.has(e.target.value) ? p.postalTrackingNumber : ''
+                      postalTrackingNumber: trackingStages.has(e.target.value) ? p.postalTrackingNumber : '',
+                      firstAppealAuthority: e.target.value === firstAppealStage ? p.firstAppealAuthority : '',
+                      secondAppealAuthority: e.target.value === secondAppealStage ? p.secondAppealAuthority : ''
                     }))
                   }
                 >
@@ -309,6 +345,26 @@ export default function RTIDetailsPage() {
                     onChange={(e) =>
                       setStageForm((p) => ({ ...p, postalTrackingNumber: e.target.value }))
                     }
+                  />
+                )}
+                {showFirstAppealAuthority && (
+                  <TextField
+                    label="First Appellate Authority"
+                    value={stageForm.firstAppealAuthority}
+                    onChange={(e) =>
+                      setStageForm((p) => ({ ...p, firstAppealAuthority: e.target.value }))
+                    }
+                    required
+                  />
+                )}
+                {showSecondAppealAuthority && (
+                  <TextField
+                    label="Second Appellate Authority"
+                    value={stageForm.secondAppealAuthority}
+                    onChange={(e) =>
+                      setStageForm((p) => ({ ...p, secondAppealAuthority: e.target.value }))
+                    }
+                    required
                   />
                 )}
                 <TextField multiline rows={3} label="Description" value={stageForm.description} onChange={(e) => setStageForm((p) => ({ ...p, description: e.target.value }))} />

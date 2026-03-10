@@ -3,7 +3,15 @@ const { RTIApplication } = require('../models/RTIApplication');
 const asyncHandler = require('../utils/asyncHandler');
 
 const createStage = asyncHandler(async (req, res) => {
-  const { rtiId, stageName, stageDate, description, postalTrackingNumber } = req.body;
+  const {
+    rtiId,
+    stageName,
+    stageDate,
+    description,
+    postalTrackingNumber,
+    firstAppealAuthority,
+    secondAppealAuthority
+  } = req.body;
 
   const rti = await RTIApplication.findById(rtiId);
   if (!rti) {
@@ -19,7 +27,13 @@ const createStage = asyncHandler(async (req, res) => {
   // Keep one record per stage name for each RTI case so edited dates overwrite old values.
   const stage = await Stage.findOneAndUpdate(
     { rtiId, stageName },
-    { stageDate, description, postalTrackingNumber: postalTrackingNumber || '' },
+    {
+      stageDate,
+      description,
+      postalTrackingNumber: postalTrackingNumber || '',
+      firstAppealAuthority: stageName === 'First Appeal Filed' ? firstAppealAuthority || '' : '',
+      secondAppealAuthority: stageName === 'Second Appeal Filed' ? secondAppealAuthority || '' : ''
+    },
     { new: true, upsert: true, runValidators: true, setDefaultsOnInsert: true, sort: { updatedAt: -1 } }
   );
 

@@ -17,7 +17,9 @@ const stageSchema = new mongoose.Schema(
     stageName: { type: String, enum: STAGE_NAMES, required: true },
     stageDate: { type: Date, required: true },
     description: { type: String, trim: true },
-    postalTrackingNumber: { type: String, trim: true }
+    postalTrackingNumber: { type: String, trim: true },
+    firstAppealAuthority: { type: String, trim: true },
+    secondAppealAuthority: { type: String, trim: true }
   },
   { timestamps: true }
 );
