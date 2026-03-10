@@ -56,6 +56,28 @@ function deadlineChipColor(deadlineStatus) {
   return info.color;
 }
 
+function deadlineRowSx(deadlineStatus) {
+  if (deadlineStatus === 'overdue') {
+    return {
+      backgroundColor: 'rgba(211, 47, 47, 0.08)'
+    };
+  }
+
+  if (deadlineStatus === 'warning') {
+    return {
+      backgroundColor: 'rgba(237, 108, 2, 0.08)'
+    };
+  }
+
+  if (deadlineStatus === 'on_track') {
+    return {
+      backgroundColor: 'rgba(46, 125, 50, 0.08)'
+    };
+  }
+
+  return {};
+}
+
 export default function RTIListPage() {
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down('md'));
@@ -219,7 +241,7 @@ export default function RTIListPage() {
           {!loading && sortedDisplayList.map((item) => {
             const chipData = deadlineChip(item.deadlines?.pioDeadlineStatus);
             return (
-              <Paper key={item._id} sx={{ p: 1.5 }}>
+              <Paper key={item._id} sx={{ p: 1.5, ...deadlineRowSx(item.deadlines?.pioDeadlineStatus) }}>
                 <Stack spacing={0.75}>
                   <Typography variant="subtitle2" fontWeight={700}>{item.rtiNumber}</Typography>
                   <Typography variant="body2">{item.subject}</Typography>
@@ -315,7 +337,7 @@ export default function RTIListPage() {
                 {!loading && sortedDisplayList.map((item) => {
                   const chipData = deadlineChip(item.deadlines?.pioDeadlineStatus);
                   return (
-                    <TableRow key={item._id} hover>
+                    <TableRow key={item._id} hover sx={deadlineRowSx(item.deadlines?.pioDeadlineStatus)}>
                       <TableCell>{item.rtiNumber}</TableCell>
                       <TableCell>{item.subject}</TableCell>
                       <TableCell>{item.department}</TableCell>
