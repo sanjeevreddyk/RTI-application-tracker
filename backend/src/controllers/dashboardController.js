@@ -29,12 +29,21 @@ const getDashboardStats = asyncHandler(async (_req, res) => {
   const upcomingDeadlines = [];
 
   for (const rti of all) {
-    const firstAppealOrder = await Stage.findOne({
-      rtiId: rti._id,
-      stageName: 'First Appeal Order Received'
-    }).sort({ stageDate: -1 });
+    const [firstAppealOrder, latestStage] = await Promise.all([
+      Stage.findOne({
+        rtiId: rti._id,
+        stageName: 'First Appeal Order Received'
+      }).sort({ stageDate: -1 }),
+      Stage.findOne({
+        rtiId: rti._id
+      }).sort({ stageDate: -1, updatedAt: -1 })
+    ]);
 
-    const deadlines = computeDeadlines(rti.applicationDate, firstAppealOrder?.stageDate);
+    const deadlines = computeDeadlines({
+      applicationDate: rti.applicationDate,
+      latestStageDate: latestStage?.stageDate,
+      firstAppealOrderDate: firstAppealOrder?.stageDate
+    });
     const isClosed =
       rti.status === 'Case Closed' || rti.status === 'Closed' || closedStageIds.has(String(rti._id));
     const pioStatus = isClosed ? 'na' : getDeadlineStatus(deadlines.pioDeadline);

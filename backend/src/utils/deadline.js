@@ -1,14 +1,29 @@
 const BUFFER_DAYS = 10;
 
-function computeDeadlines(applicationDate, firstAppealOrderDate) {
-  const appDate = applicationDate ? new Date(applicationDate) : null;
-  const pioDeadline = appDate ? addDays(appDate, 30 + BUFFER_DAYS) : null;
+function toDate(value) {
+  if (!value) {
+    return null;
+  }
+
+  const date = new Date(value);
+  return Number.isNaN(date.getTime()) ? null : date;
+}
+
+function computeDeadlines({ applicationDate, latestStageDate, firstAppealOrderDate }) {
+  const appDate = toDate(applicationDate);
+  const latestDate = toDate(latestStageDate);
+  const firstAppealOrder = toDate(firstAppealOrderDate);
+  const baseDate = latestDate || appDate;
+
+  const pioDeadline = baseDate ? addDays(baseDate, 30 + BUFFER_DAYS) : null;
   const firstAppealEligibleOn = pioDeadline;
-  const secondAppealEligibleOn = firstAppealOrderDate
-    ? addDays(new Date(firstAppealOrderDate), 90 + BUFFER_DAYS)
+  const secondAppealBaseDate = firstAppealOrder || baseDate;
+  const secondAppealEligibleOn = secondAppealBaseDate
+    ? addDays(secondAppealBaseDate, 90 + BUFFER_DAYS)
     : null;
 
   return {
+    baseDate,
     pioDeadline,
     firstAppealEligibleOn,
     secondAppealEligibleOn

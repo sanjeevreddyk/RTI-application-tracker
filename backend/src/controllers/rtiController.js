@@ -38,7 +38,7 @@ const buildFilters = (query) => {
 };
 
 const enrichRti = async (rtiDoc) => {
-  const [firstAppealOrder, caseClosedStage] = await Promise.all([
+  const [firstAppealOrder, caseClosedStage, latestStage] = await Promise.all([
     Stage.findOne({
       rtiId: rtiDoc._id,
       stageName: 'First Appeal Order Received'
@@ -46,10 +46,17 @@ const enrichRti = async (rtiDoc) => {
     Stage.findOne({
       rtiId: rtiDoc._id,
       stageName: 'Case Closed'
-    }).sort({ stageDate: -1 })
+    }).sort({ stageDate: -1 }),
+    Stage.findOne({
+      rtiId: rtiDoc._id
+    }).sort({ stageDate: -1, updatedAt: -1 })
   ]);
 
-  const deadlines = computeDeadlines(rtiDoc.applicationDate, firstAppealOrder?.stageDate);
+  const deadlines = computeDeadlines({
+    applicationDate: rtiDoc.applicationDate,
+    latestStageDate: latestStage?.stageDate,
+    firstAppealOrderDate: firstAppealOrder?.stageDate
+  });
   const isClosed = rtiDoc.status === 'Case Closed' || rtiDoc.status === 'Closed' || Boolean(caseClosedStage);
   const effectiveStatus = isClosed ? 'Case Closed' : rtiDoc.status;
   const pioDeadlineStatus = isClosed ? 'na' : getDeadlineStatus(deadlines.pioDeadline);
