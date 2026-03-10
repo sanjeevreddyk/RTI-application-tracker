@@ -4,6 +4,11 @@ import { useDispatch, useSelector } from 'react-redux';
 import {
   Button,
   Chip,
+  Dialog,
+  DialogActions,
+  DialogContent,
+  DialogContentText,
+  DialogTitle,
   MenuItem,
   Paper,
   Stack,
@@ -40,6 +45,7 @@ export default function RTIListPage() {
   const [overdue, setOverdue] = useState(() => initialParams.get('overdue') || '');
   const [sortBy, setSortBy] = useState('applicationDate');
   const [sortDir, setSortDir] = useState('desc');
+  const [deleteTarget, setDeleteTarget] = useState(null);
 
   const query = useMemo(
     () => ({ search, year, status, department, overdue }),
@@ -82,6 +88,16 @@ export default function RTIListPage() {
     });
     return rows;
   }, [displayList, sortBy, sortDir]);
+  const departmentOptions = useMemo(() => {
+    const values = new Set();
+    list.forEach((item) => {
+      const value = String(item?.department || '').trim();
+      if (value) {
+        values.add(value);
+      }
+    });
+    return Array.from(values).sort((a, b) => a.localeCompare(b));
+  }, [list]);
 
   function handleSort(column) {
     if (sortBy === column) {
@@ -91,6 +107,24 @@ export default function RTIListPage() {
 
     setSortBy(column);
     setSortDir('asc');
+  }
+
+  function openDeleteConfirm(item) {
+    setDeleteTarget(item);
+  }
+
+  function closeDeleteConfirm() {
+    setDeleteTarget(null);
+  }
+
+  async function confirmDelete() {
+    if (!deleteTarget?._id) {
+      return;
+    }
+
+    await dispatch(deleteRti(deleteTarget._id));
+    closeDeleteConfirm();
+    dispatch(fetchRtis(query));
   }
 
   useEffect(() => {
@@ -131,7 +165,21 @@ export default function RTIListPage() {
               <MenuItem key={option || 'all'} value={option}>{option || 'All'}</MenuItem>
             ))}
           </TextField>
-          <TextField fullWidth label="Department" value={department} onChange={(e) => setDepartment(e.target.value)} />
+          <TextField
+            fullWidth
+            select
+            label="Department"
+            value={department}
+            onChange={(e) => setDepartment(e.target.value)}
+            sx={{ minWidth: 220 }}
+          >
+            <MenuItem value="">All</MenuItem>
+            {departmentOptions.map((option) => (
+              <MenuItem key={option} value={option}>
+                {option}
+              </MenuItem>
+            ))}
+          </TextField>
         </Stack>
         {overdue === 'true' && (
           <Typography variant="caption" color="error.main" sx={{ mt: 1, display: 'block' }}>
@@ -159,7 +207,7 @@ export default function RTIListPage() {
                   <Stack direction="row" spacing={1} flexWrap="wrap">
                     <Button size="small" component={Link} to={`/rtis/${item._id}`}>View</Button>
                     <Button size="small" component={Link} to={`/rtis/${item._id}/edit`}>Edit</Button>
-                    <Button size="small" color="error" onClick={() => dispatch(deleteRti(item._id)).then(() => dispatch(fetchRtis(query)))}>
+                    <Button size="small" color="error" onClick={() => openDeleteConfirm(item)}>
                       Delete
                     </Button>
                   </Stack>
@@ -251,7 +299,7 @@ export default function RTIListPage() {
                         <Stack direction="row" spacing={1}>
                           <Button size="small" component={Link} to={`/rtis/${item._id}`}>View</Button>
                           <Button size="small" component={Link} to={`/rtis/${item._id}/edit`}>Edit</Button>
-                          <Button size="small" color="error" onClick={() => dispatch(deleteRti(item._id)).then(() => dispatch(fetchRtis(query)))}>
+                          <Button size="small" color="error" onClick={() => openDeleteConfirm(item)}>
                             Delete
                           </Button>
                         </Stack>
@@ -264,6 +312,20 @@ export default function RTIListPage() {
           </TableContainer>
         </Paper>
       )}
+      <Dialog open={Boolean(deleteTarget)} onClose={closeDeleteConfirm}>
+        <DialogTitle>Confirm Delete</DialogTitle>
+        <DialogContent>
+          <DialogContentText>
+            Delete RTI application {deleteTarget?.rtiNumber ? `(${deleteTarget.rtiNumber})` : ''}? This action cannot be undone.
+          </DialogContentText>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={closeDeleteConfirm}>Cancel</Button>
+          <Button color="error" variant="contained" onClick={confirmDelete}>
+            Delete
+          </Button>
+        </DialogActions>
+      </Dialog>
     </Stack>
   );
 }

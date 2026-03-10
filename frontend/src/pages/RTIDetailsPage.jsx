@@ -49,6 +49,7 @@ const stageNames = [
   'Second Appeal Order',
   'Case Closed'
 ];
+const trackingStages = new Set(['First Appeal Filed', 'Second Appeal Filed']);
 
 function getTodayDate() {
   const now = new Date();
@@ -64,7 +65,8 @@ export default function RTIDetailsPage() {
   const [stageForm, setStageForm] = useState({
     stageName: 'PIO Response Received',
     stageDate: getTodayDate(),
-    description: ''
+    description: '',
+    postalTrackingNumber: ''
   });
   const [stageFiles, setStageFiles] = useState([]);
   const [noteForm, setNoteForm] = useState({ noteText: '', author: 'System User' });
@@ -122,7 +124,31 @@ export default function RTIDetailsPage() {
     });
     return map;
   }, [stages]);
-  const isStageFormValid = Boolean(stageForm.stageName?.trim() && stageForm.stageDate && stageFiles.length > 0);
+  const stageTrackingById = useMemo(() => {
+    const map = new Map();
+    stages.forEach((stage) => {
+      if (stage?._id) {
+        map.set(String(stage._id), stage.postalTrackingNumber || '');
+      }
+    });
+    return map;
+  }, [stages]);
+  const stageTrackingByName = useMemo(() => {
+    const map = new Map();
+    stages.forEach((stage) => {
+      if (stage?.stageName) {
+        map.set(stage.stageName, stage.postalTrackingNumber || '');
+      }
+    });
+    return map;
+  }, [stages]);
+  const showStagePostalTracking = trackingStages.has(stageForm.stageName);
+  const isCaseClosedStage = stageForm.stageName === 'Case Closed';
+  const isStageFormValid = Boolean(
+    stageForm.stageName?.trim() &&
+      stageForm.stageDate &&
+      (isCaseClosedStage || stageFiles.length > 0)
+  );
 
   const resolveDocumentStageDate = (doc) => {
     if (doc?.stageId && stageDateById.has(String(doc.stageId))) {
@@ -134,6 +160,17 @@ export default function RTIDetailsPage() {
     }
 
     return null;
+  };
+  const resolveDocumentStageTracking = (doc) => {
+    if (doc?.stageId && stageTrackingById.has(String(doc.stageId))) {
+      return stageTrackingById.get(String(doc.stageId));
+    }
+
+    if (doc?.stageName && stageTrackingByName.has(doc.stageName)) {
+      return stageTrackingByName.get(doc.stageName);
+    }
+
+    return '';
   };
 
   async function submitStage(event) {
@@ -150,7 +187,7 @@ export default function RTIDetailsPage() {
       return;
     }
 
-    if (!stageFiles.length) {
+    if (!isCaseClosedStage && !stageFiles.length) {
       setStageSubmitError('Please upload at least one document for this stage.');
       return;
     }
@@ -173,7 +210,8 @@ export default function RTIDetailsPage() {
       setStageForm({
         stageName: 'PIO Response Received',
         stageDate: getTodayDate(),
-        description: ''
+        description: '',
+        postalTrackingNumber: ''
       });
       setStageFiles([]);
       dispatch(fetchRtiById(id));
@@ -213,6 +251,9 @@ export default function RTIDetailsPage() {
           <Typography variant="h6">{selected.rtiNumber} - {selected.subject}</Typography>
           <Typography variant="body2" color="text.secondary">Department: {selected.department}</Typography>
           <Typography variant="body2" color="text.secondary">Applicant: {selected.applicantName}</Typography>
+          <Typography variant="body2" color="text.secondary">
+            Postal Tracking Number: {selected.postalTrackingNumber || '-'}
+          </Typography>
           <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1} mt={1}>
             <Chip label={`Status: ${selected.status}`} />
             <Chip label={`PIO Deadline: ${formatDate(selected.deadlines?.pioDeadline)}`} color={pioChip.color} />
@@ -234,12 +275,32 @@ export default function RTIDetailsPage() {
             <Box component="form" onSubmit={submitStage}>
               <Stack spacing={1.5}>
                 {!!stageSubmitError && <Alert severity="error">{stageSubmitError}</Alert>}
-                <TextField select label="Stage" value={stageForm.stageName} onChange={(e) => setStageForm((p) => ({ ...p, stageName: e.target.value }))}>
+                <TextField
+                  select
+                  label="Stage"
+                  value={stageForm.stageName}
+                  onChange={(e) =>
+                    setStageForm((p) => ({
+                      ...p,
+                      stageName: e.target.value,
+                      postalTrackingNumber: trackingStages.has(e.target.value) ? p.postalTrackingNumber : ''
+                    }))
+                  }
+                >
                   {stageNames.map((name) => (
                     <MenuItem key={name} value={name}>{name}</MenuItem>
                   ))}
                 </TextField>
                 <TextField type="date" label="Stage Date" InputLabelProps={{ shrink: true }} value={stageForm.stageDate} onChange={(e) => setStageForm((p) => ({ ...p, stageDate: e.target.value }))} required />
+                {showStagePostalTracking && (
+                  <TextField
+                    label="Postal Tracking Number (Optional)"
+                    value={stageForm.postalTrackingNumber}
+                    onChange={(e) =>
+                      setStageForm((p) => ({ ...p, postalTrackingNumber: e.target.value }))
+                    }
+                  />
+                )}
                 <TextField multiline rows={3} label="Description" value={stageForm.description} onChange={(e) => setStageForm((p) => ({ ...p, description: e.target.value }))} />
                 <Button variant="outlined" component="label">
                   Upload Stage Documents
@@ -252,12 +313,12 @@ export default function RTIDetailsPage() {
                   />
                 </Button>
                 <Typography variant="caption" color="text.secondary">
-                  Upload Stage Documents *
+                  {isCaseClosedStage ? 'Upload Stage Documents (Optional)' : 'Upload Stage Documents *'}
                 </Typography>
                 {!!stageFiles.length && (
                   <Alert severity="info">{stageFiles.length} file(s) selected for this timeline stage.</Alert>
                 )}
-                {!stageFiles.length && (
+                {!stageFiles.length && !isCaseClosedStage && (
                   <Typography variant="caption" color="error.main">
                     At least one file is required for stage submission.
                   </Typography>
@@ -328,6 +389,7 @@ export default function RTIDetailsPage() {
                             <TableCell>Type</TableCell>
                             <TableCell>Stage</TableCell>
                             <TableCell>Stage Date</TableCell>
+                            <TableCell>Postal Tracking Number</TableCell>
                             <TableCell>Actions</TableCell>
                           </TableRow>
                         </TableHead>
@@ -338,6 +400,7 @@ export default function RTIDetailsPage() {
                               <TableCell>{doc.fileType}</TableCell>
                               <TableCell>{doc.stageName || 'General'}</TableCell>
                               <TableCell>{formatDate(resolveDocumentStageDate(doc))}</TableCell>
+                              <TableCell>{resolveDocumentStageTracking(doc) || '-'}</TableCell>
                               <TableCell>
                                 <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1}>
                                   <Link href={resolveDocumentUrl(doc.filePath)} target="_blank" rel="noreferrer">

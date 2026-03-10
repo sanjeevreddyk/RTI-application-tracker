@@ -42,7 +42,14 @@ export default function Timeline({ stages }) {
                 {stage}
               </Typography>
             </Stack>
-            <Chip label={stageRecord ? formatDate(stageRecord.stageDate) : 'Pending'} size="small" />
+            <Stack spacing={0.5} alignItems="flex-end">
+              <Chip label={stageRecord ? formatDate(stageRecord.stageDate) : 'Pending'} size="small" />
+              {stageRecord?.postalTrackingNumber && (
+                <Typography variant="caption" color="text.secondary">
+                  Tracking: {stageRecord.postalTrackingNumber}
+                </Typography>
+              )}
+            </Stack>
           </Box>
         );
       })}

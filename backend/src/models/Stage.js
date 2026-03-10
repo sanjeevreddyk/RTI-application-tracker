@@ -16,7 +16,8 @@ const stageSchema = new mongoose.Schema(
     rtiId: { type: mongoose.Schema.Types.ObjectId, ref: 'RTIApplication', required: true, index: true },
     stageName: { type: String, enum: STAGE_NAMES, required: true },
     stageDate: { type: Date, required: true },
-    description: { type: String, trim: true }
+    description: { type: String, trim: true },
+    postalTrackingNumber: { type: String, trim: true }
   },
   { timestamps: true }
 );
