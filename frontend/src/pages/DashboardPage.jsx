@@ -1,7 +1,22 @@
-import { useEffect } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useDispatch, useSelector } from 'react-redux';
-import { Card, CardActionArea, CardContent, Grid2, Paper, Stack, Typography } from '@mui/material';
+import {
+  Card,
+  CardActionArea,
+  CardContent,
+  Grid2,
+  Paper,
+  Stack,
+  Table,
+  TableBody,
+  TableCell,
+  TableContainer,
+  TableHead,
+  TableRow,
+  TableSortLabel,
+  Typography
+} from '@mui/material';
 import {
   Bar,
   BarChart,
@@ -23,6 +38,8 @@ export default function DashboardPage() {
   const navigate = useNavigate();
   const dispatch = useDispatch();
   const { data } = useSelector((state) => state.dashboard);
+  const [sortBy, setSortBy] = useState('applicationDate');
+  const [sortDir, setSortDir] = useState('asc');
 
   useEffect(() => {
     dispatch(fetchDashboard());
@@ -49,6 +66,34 @@ export default function DashboardPage() {
   function openFilteredRtis(params) {
     const query = new URLSearchParams(params).toString();
     navigate(query ? `/rtis?${query}` : '/rtis');
+  }
+
+  const sortedUpcomingDeadlines = useMemo(() => {
+    const rows = [...(data?.upcomingDeadlines || [])];
+    rows.sort((a, b) => {
+      if (sortBy === 'applicationDate' || sortBy === 'deadlineDate') {
+        const av = new Date(a[sortBy] || 0).getTime();
+        const bv = new Date(b[sortBy] || 0).getTime();
+        return sortDir === 'asc' ? av - bv : bv - av;
+      }
+
+      const av = String(a[sortBy] || '').toLowerCase();
+      const bv = String(b[sortBy] || '').toLowerCase();
+      if (av < bv) return sortDir === 'asc' ? -1 : 1;
+      if (av > bv) return sortDir === 'asc' ? 1 : -1;
+      return 0;
+    });
+    return rows;
+  }, [data?.upcomingDeadlines, sortBy, sortDir]);
+
+  function handleSort(column) {
+    if (sortBy === column) {
+      setSortDir((prev) => (prev === 'asc' ? 'desc' : 'asc'));
+      return;
+    }
+
+    setSortBy(column);
+    setSortDir('asc');
   }
 
   return (
@@ -120,11 +165,70 @@ export default function DashboardPage() {
         <Typography variant="subtitle1" fontWeight={700} mb={1}>
           Upcoming Deadlines
         </Typography>
-        {(data?.upcomingDeadlines || []).map((item) => (
-          <Typography key={`${item.rtiId}-${item.deadlineType}`} variant="body2" sx={{ py: 0.5 }}>
-            {item.rtiNumber} | {item.department} | {item.deadlineType}: {formatDate(item.deadlineDate)}
-          </Typography>
-        ))}
+        <TableContainer sx={{ overflowX: 'auto' }}>
+          <Table size="small">
+            <TableHead>
+              <TableRow>
+                <TableCell sortDirection={sortBy === 'rtiNumber' ? sortDir : false}>
+                  <TableSortLabel
+                    active={sortBy === 'rtiNumber'}
+                    direction={sortBy === 'rtiNumber' ? sortDir : 'asc'}
+                    onClick={() => handleSort('rtiNumber')}
+                  >
+                    RTI Number
+                  </TableSortLabel>
+                </TableCell>
+                <TableCell sortDirection={sortBy === 'department' ? sortDir : false}>
+                  <TableSortLabel
+                    active={sortBy === 'department'}
+                    direction={sortBy === 'department' ? sortDir : 'asc'}
+                    onClick={() => handleSort('department')}
+                  >
+                    Department
+                  </TableSortLabel>
+                </TableCell>
+                <TableCell sortDirection={sortBy === 'applicationDate' ? sortDir : false}>
+                  <TableSortLabel
+                    active={sortBy === 'applicationDate'}
+                    direction={sortBy === 'applicationDate' ? sortDir : 'asc'}
+                    onClick={() => handleSort('applicationDate')}
+                  >
+                    Filed Date
+                  </TableSortLabel>
+                </TableCell>
+                <TableCell sortDirection={sortBy === 'deadlineDate' ? sortDir : false}>
+                  <TableSortLabel
+                    active={sortBy === 'deadlineDate'}
+                    direction={sortBy === 'deadlineDate' ? sortDir : 'asc'}
+                    onClick={() => handleSort('deadlineDate')}
+                  >
+                    Deadline Date
+                  </TableSortLabel>
+                </TableCell>
+                <TableCell sortDirection={sortBy === 'status' ? sortDir : false}>
+                  <TableSortLabel
+                    active={sortBy === 'status'}
+                    direction={sortBy === 'status' ? sortDir : 'asc'}
+                    onClick={() => handleSort('status')}
+                  >
+                    Status
+                  </TableSortLabel>
+                </TableCell>
+              </TableRow>
+            </TableHead>
+            <TableBody>
+              {sortedUpcomingDeadlines.map((item) => (
+                <TableRow key={`${item.rtiId}-${item.deadlineType}`}>
+                  <TableCell>{item.rtiNumber}</TableCell>
+                  <TableCell>{item.department}</TableCell>
+                  <TableCell>{formatDate(item.applicationDate)}</TableCell>
+                  <TableCell>{formatDate(item.deadlineDate)}</TableCell>
+                  <TableCell>{item.status}</TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
+        </TableContainer>
       </Paper>
     </Stack>
   );

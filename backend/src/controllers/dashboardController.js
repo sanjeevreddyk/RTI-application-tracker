@@ -57,6 +57,7 @@ const getDashboardStats = asyncHandler(async (_req, res) => {
         rtiId: rti._id,
         rtiNumber: rti.rtiNumber,
         department: rti.department,
+        applicationDate: rti.applicationDate,
         deadlineType: 'PIO Response Deadline',
         deadlineDate: deadlines.pioDeadline,
         status: pioStatus
@@ -103,7 +104,9 @@ const getDashboardStats = asyncHandler(async (_req, res) => {
       byDepartment: byDepartment.map((item) => ({ department: item._id, count: item.count })),
       successVsPending
     },
-    upcomingDeadlines: upcomingDeadlines.sort((a, b) => new Date(a.deadlineDate) - new Date(b.deadlineDate)).slice(0, 10)
+    upcomingDeadlines: upcomingDeadlines
+      .sort((a, b) => new Date(a.applicationDate) - new Date(b.applicationDate))
+      .slice(0, 10)
   });
 });
 
