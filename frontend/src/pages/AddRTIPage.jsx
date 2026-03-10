@@ -1,9 +1,9 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useDispatch } from 'react-redux';
 import { useNavigate } from 'react-router-dom';
 import { Stack, Typography } from '@mui/material';
 import RTIForm from '../components/RTIForm';
-import { createRti, uploadDocuments } from '../features/rti/rtiSlice';
+import { createRti, fetchRtis, uploadDocuments } from '../features/rti/rtiSlice';
 
 function getTodayDate() {
   const now = new Date();
@@ -15,7 +15,7 @@ const initial = {
   applicantName: '',
   applicantAddress: '',
   department: '',
-  pioName: '',
+  pioName: 'The Public Information Officer',
   subject: '',
   rtiNumber: '',
   applicationDate: getTodayDate(),
@@ -25,6 +25,22 @@ const initial = {
   remarks: '',
   status: 'RTI Filed'
 };
+
+function getNextRtiNumber(items) {
+  const maxSerial = (items || []).reduce((max, item) => {
+    const value = String(item?.rtiNumber || '').trim();
+    const match = /^RTI(\d+)$/i.exec(value);
+    if (!match) {
+      return max;
+    }
+
+    const serial = Number(match[1]);
+    return Number.isNaN(serial) ? max : Math.max(max, serial);
+  }, 0);
+
+  const nextSerial = maxSerial + 1;
+  return `RTI${String(nextSerial).padStart(3, '0')}`;
+}
 
 export default function AddRTIPage() {
   const dispatch = useDispatch();
@@ -49,6 +65,34 @@ export default function AddRTIPage() {
     !Number.isNaN(Number(form.applicationFee)) &&
     Number(form.applicationFee) >= 0 &&
     initialFiles.length > 0;
+
+  useEffect(() => {
+    let cancelled = false;
+
+    async function populateRtiNumber() {
+      try {
+        const list = await dispatch(fetchRtis()).unwrap();
+        if (cancelled) {
+          return;
+        }
+
+        const nextNumber = getNextRtiNumber(list);
+        setForm((prev) => (prev.rtiNumber ? prev : { ...prev, rtiNumber: nextNumber }));
+      } catch (_error) {
+        if (cancelled) {
+          return;
+        }
+
+        setForm((prev) => (prev.rtiNumber ? prev : { ...prev, rtiNumber: 'RTI001' }));
+      }
+    }
+
+    populateRtiNumber();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [dispatch]);
 
   function onChange(event) {
     const { name, value } = event.target;
