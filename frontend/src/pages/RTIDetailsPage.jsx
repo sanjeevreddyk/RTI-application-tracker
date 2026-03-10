@@ -104,7 +104,37 @@ export default function RTIDetailsPage() {
     const extras = Object.keys(documentsByStage).filter((stage) => !stageOptions.includes(stage));
     return [...stageOptions, ...extras].filter((stage) => documentsByStage[stage]?.length);
   }, [documentsByStage, stageOptions]);
+  const stageDateById = useMemo(() => {
+    const map = new Map();
+    stages.forEach((stage) => {
+      if (stage?._id) {
+        map.set(String(stage._id), stage.stageDate);
+      }
+    });
+    return map;
+  }, [stages]);
+  const stageDateByName = useMemo(() => {
+    const map = new Map();
+    stages.forEach((stage) => {
+      if (stage?.stageName) {
+        map.set(stage.stageName, stage.stageDate);
+      }
+    });
+    return map;
+  }, [stages]);
   const isStageFormValid = Boolean(stageForm.stageName?.trim() && stageForm.stageDate && stageFiles.length > 0);
+
+  const resolveDocumentStageDate = (doc) => {
+    if (doc?.stageId && stageDateById.has(String(doc.stageId))) {
+      return stageDateById.get(String(doc.stageId));
+    }
+
+    if (doc?.stageName && stageDateByName.has(doc.stageName)) {
+      return stageDateByName.get(doc.stageName);
+    }
+
+    return null;
+  };
 
   async function submitStage(event) {
     event.preventDefault();
@@ -297,7 +327,7 @@ export default function RTIDetailsPage() {
                             <TableCell>File</TableCell>
                             <TableCell>Type</TableCell>
                             <TableCell>Stage</TableCell>
-                            <TableCell>Uploaded</TableCell>
+                            <TableCell>Stage Date</TableCell>
                             <TableCell>Actions</TableCell>
                           </TableRow>
                         </TableHead>
@@ -307,7 +337,7 @@ export default function RTIDetailsPage() {
                               <TableCell>{doc.fileName}</TableCell>
                               <TableCell>{doc.fileType}</TableCell>
                               <TableCell>{doc.stageName || 'General'}</TableCell>
-                              <TableCell>{formatDate(doc.uploadDate)}</TableCell>
+                              <TableCell>{formatDate(resolveDocumentStageDate(doc))}</TableCell>
                               <TableCell>
                                 <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1}>
                                   <Link href={resolveDocumentUrl(doc.filePath)} target="_blank" rel="noreferrer">
