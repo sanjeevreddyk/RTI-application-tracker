@@ -163,11 +163,21 @@ export default function RTIDetailsPage() {
   };
   const resolveDocumentStageTracking = (doc) => {
     if (doc?.stageId && stageTrackingById.has(String(doc.stageId))) {
-      return stageTrackingById.get(String(doc.stageId));
+      const value = stageTrackingById.get(String(doc.stageId));
+      if (value) {
+        return value;
+      }
     }
 
     if (doc?.stageName && stageTrackingByName.has(doc.stageName)) {
-      return stageTrackingByName.get(doc.stageName);
+      const value = stageTrackingByName.get(doc.stageName);
+      if (value) {
+        return value;
+      }
+    }
+
+    if (doc?.stageName === 'RTI Filed') {
+      return selected?.postalTrackingNumber || '';
     }
 
     return '';
