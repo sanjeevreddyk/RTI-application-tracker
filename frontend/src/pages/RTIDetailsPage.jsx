@@ -59,6 +59,18 @@ function getTodayDate() {
   return local.toISOString().slice(0, 10);
 }
 
+function DetailRow({ label, value }) {
+  if (!value) {
+    return null;
+  }
+
+  return (
+    <Typography variant="body2" color="text.secondary">
+      {label}: {value}
+    </Typography>
+  );
+}
+
 export default function RTIDetailsPage() {
   const { id } = useParams();
   const dispatch = useDispatch();
@@ -161,18 +173,50 @@ export default function RTIDetailsPage() {
       (!showSecondAppealAuthority || stageForm.secondAppealAuthorityAddress?.trim()) &&
       (isCaseClosedStage || stageFiles.length > 0)
   );
-  const firstAppealAuthority = useMemo(() => {
+  const firstAppealInfo = useMemo(() => {
     const stage = stages.find((item) => item.stageName === firstAppealStage);
-    const authority = stage?.firstAppealAuthority || '';
-    const address = stage?.firstAppealAuthorityAddress || '';
-    return [authority, address].filter(Boolean).join(', ') || '-';
+    return {
+      authority: stage?.firstAppealAuthority || '',
+      address: stage?.firstAppealAuthorityAddress || '',
+      filedDate: stage?.stageDate || '',
+      postalTrackingNumber: stage?.postalTrackingNumber || ''
+    };
   }, [stages]);
-  const secondAppealAuthority = useMemo(() => {
+  const secondAppealInfo = useMemo(() => {
     const stage = stages.find((item) => item.stageName === secondAppealStage);
-    const authority = stage?.secondAppealAuthority || '';
-    const address = stage?.secondAppealAuthorityAddress || '';
-    return [authority, address].filter(Boolean).join(', ') || '-';
+    return {
+      authority: stage?.secondAppealAuthority || '',
+      address: stage?.secondAppealAuthorityAddress || '',
+      filedDate: stage?.stageDate || '',
+      postalTrackingNumber: stage?.postalTrackingNumber || ''
+    };
   }, [stages]);
+  const stageIndexMap = useMemo(() => {
+    const map = new Map();
+    stageNames.forEach((name, index) => map.set(name, index));
+    return map;
+  }, []);
+  const currentStageIndex = stageIndexMap.get(selected?.status) ?? -1;
+  const hasFirstAppealStage =
+    currentStageIndex >= (stageIndexMap.get(firstAppealStage) ?? Number.MAX_SAFE_INTEGER) ||
+    Boolean(stages.find((item) => item.stageName === firstAppealStage));
+  const hasSecondAppealStage =
+    currentStageIndex >= (stageIndexMap.get(secondAppealStage) ?? Number.MAX_SAFE_INTEGER) ||
+    Boolean(stages.find((item) => item.stageName === secondAppealStage));
+  const hasApplicantInfo = Boolean(selected?.applicantName || selected?.applicantAddress);
+  const hasPioInfo = Boolean(selected?.pioName || selected?.pioAddress);
+  const hasFirstAppealInfo = hasFirstAppealStage && Boolean(
+    firstAppealInfo.authority ||
+      firstAppealInfo.address ||
+      firstAppealInfo.filedDate ||
+      firstAppealInfo.postalTrackingNumber
+  );
+  const hasSecondAppealInfo = hasSecondAppealStage && Boolean(
+    secondAppealInfo.authority ||
+      secondAppealInfo.address ||
+      secondAppealInfo.filedDate ||
+      secondAppealInfo.postalTrackingNumber
+  );
 
   const resolveDocumentStageDate = (doc) => {
     if (doc?.stageId && stageDateById.has(String(doc.stageId))) {
@@ -308,21 +352,61 @@ export default function RTIDetailsPage() {
         <Paper sx={{ p: 2 }}>
           <Typography variant="h6">{selected.rtiNumber} - {selected.subject}</Typography>
           <Typography variant="body2" color="text.secondary">Department: {selected.department}</Typography>
-          <Typography variant="body2" color="text.secondary">Applicant: {selected.applicantName}</Typography>
-          <Typography variant="body2" color="text.secondary">
-            Public Information Officer: {[selected.pioName, selected.pioAddress].filter(Boolean).join(', ') || '-'}
-          </Typography>
-          <Typography variant="body2" color="text.secondary">
-            Postal Tracking Number: {selected.postalTrackingNumber || '-'}
-          </Typography>
-          <Typography variant="body2" color="text.secondary">
-            Appellate Authorities: {[`First: ${firstAppealAuthority}`, `Second: ${secondAppealAuthority}`].join(' | ')}
-          </Typography>
           <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1} mt={1}>
             <Chip label={`Status: ${selected.status}`} />
             <Chip label={`PIO Deadline: ${formatDate(selected.deadlines?.pioDeadline)}`} color={pioChip.color} />
           </Stack>
         </Paper>
+      )}
+
+      {selected && (
+        <Grid2 container spacing={2}>
+          {hasApplicantInfo && (
+            <Grid2 size={{ xs: 12, md: 6, lg: 3 }}>
+              <Paper sx={{ p: 2 }}>
+                <Typography variant="subtitle1" fontWeight={700} mb={1}>Applicant</Typography>
+                <DetailRow label="Name" value={selected.applicantName} />
+                <DetailRow label="Address" value={selected.applicantAddress} />
+                <DetailRow label="Filed Date" value={formatDate(selected.applicationDate)} />
+                <DetailRow label="Postal Reference" value={selected.postalTrackingNumber} />
+              </Paper>
+            </Grid2>
+          )}
+
+          {hasPioInfo && (
+            <Grid2 size={{ xs: 12, md: 6, lg: 3 }}>
+              <Paper sx={{ p: 2 }}>
+                <Typography variant="subtitle1" fontWeight={700} mb={1}>Public Information Officer</Typography>
+                <DetailRow label="Name" value={selected.pioName} />
+                <DetailRow label="Address" value={selected.pioAddress} />
+              </Paper>
+            </Grid2>
+          )}
+
+          {hasFirstAppealInfo && (
+            <Grid2 size={{ xs: 12, md: 6, lg: 3 }}>
+              <Paper sx={{ p: 2 }}>
+                <Typography variant="subtitle1" fontWeight={700} mb={1}>First Appellate Authority</Typography>
+                <DetailRow label="Authority" value={firstAppealInfo.authority} />
+                <DetailRow label="Address" value={firstAppealInfo.address} />
+                <DetailRow label="Filed Date" value={formatDate(firstAppealInfo.filedDate)} />
+                <DetailRow label="Postal Reference" value={firstAppealInfo.postalTrackingNumber} />
+              </Paper>
+            </Grid2>
+          )}
+
+          {hasSecondAppealInfo && (
+            <Grid2 size={{ xs: 12, md: 6, lg: 3 }}>
+              <Paper sx={{ p: 2 }}>
+                <Typography variant="subtitle1" fontWeight={700} mb={1}>Second Appellate Authority</Typography>
+                <DetailRow label="Authority" value={secondAppealInfo.authority} />
+                <DetailRow label="Address" value={secondAppealInfo.address} />
+                <DetailRow label="Filed Date" value={formatDate(secondAppealInfo.filedDate)} />
+                <DetailRow label="Postal Reference" value={secondAppealInfo.postalTrackingNumber} />
+              </Paper>
+            </Grid2>
+          )}
+        </Grid2>
       )}
 
       <Grid2 container spacing={2}>

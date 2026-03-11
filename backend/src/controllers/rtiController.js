@@ -5,7 +5,7 @@ const { Stage } = require('../models/Stage');
 const Document = require('../models/Document');
 const Note = require('../models/Note');
 const asyncHandler = require('../utils/asyncHandler');
-const { computeDeadlines, getDeadlineStatus } = require('../utils/deadline');
+const { computeDeadlines, getDeadlineStatus, getReminderRule } = require('../utils/deadline');
 const { destroyByPublicId } = require('../config/cloudinary');
 
 const buildFilters = (query) => {
@@ -63,6 +63,8 @@ const enrichRti = async (rtiDoc) => {
   const secondAppealDeadlineStatus = isClosed
     ? 'na'
     : getDeadlineStatus(deadlines.secondAppealEligibleOn);
+  const pioReminderRule = isClosed ? null : getReminderRule(deadlines.pioDeadline);
+  const secondAppealReminderRule = isClosed ? null : getReminderRule(deadlines.secondAppealEligibleOn);
 
   return {
     ...rtiDoc.toObject(),
@@ -70,9 +72,11 @@ const enrichRti = async (rtiDoc) => {
     deadlines: {
       pioDeadline: deadlines.pioDeadline,
       pioDeadlineStatus,
+      pioReminderRule,
       firstAppealEligibleOn: deadlines.firstAppealEligibleOn,
       secondAppealEligibleOn: deadlines.secondAppealEligibleOn,
-      secondAppealDeadlineStatus
+      secondAppealDeadlineStatus,
+      secondAppealReminderRule
     }
   };
 };

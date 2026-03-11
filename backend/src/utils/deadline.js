@@ -56,7 +56,46 @@ function getDeadlineStatus(deadline) {
   return 'on_track';
 }
 
+function getDaysToDeadline(deadline) {
+  if (!deadline) {
+    return null;
+  }
+
+  const now = new Date();
+  const startOfToday = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+  const target = new Date(deadline);
+  const startOfTarget = new Date(target.getFullYear(), target.getMonth(), target.getDate());
+
+  return Math.floor((startOfTarget - startOfToday) / (1000 * 60 * 60 * 24));
+}
+
+function getReminderRule(deadline) {
+  const daysToDeadline = getDaysToDeadline(deadline);
+  if (daysToDeadline === null) {
+    return null;
+  }
+
+  if (daysToDeadline < 0) {
+    return 'Overdue';
+  }
+
+  if (daysToDeadline === 7) {
+    return 'T-7';
+  }
+
+  if (daysToDeadline === 3) {
+    return 'T-3';
+  }
+
+  if (daysToDeadline === 1) {
+    return 'T-1';
+  }
+
+  return null;
+}
+
 module.exports = {
   computeDeadlines,
-  getDeadlineStatus
+  getDeadlineStatus,
+  getReminderRule
 };

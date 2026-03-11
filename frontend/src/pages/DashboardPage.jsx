@@ -214,6 +214,7 @@ export default function DashboardPage() {
                     Status
                   </TableSortLabel>
                 </TableCell>
+                <TableCell>Reminder Rule</TableCell>
               </TableRow>
             </TableHead>
             <TableBody>
@@ -224,6 +225,7 @@ export default function DashboardPage() {
                   <TableCell>{formatDate(item.applicationDate)}</TableCell>
                   <TableCell>{formatDate(item.deadlineDate)}</TableCell>
                   <TableCell>{item.status}</TableCell>
+                  <TableCell>{item.reminderRule || '-'}</TableCell>
                 </TableRow>
               ))}
             </TableBody>

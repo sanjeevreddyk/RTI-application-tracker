@@ -1,7 +1,7 @@
 const { RTIApplication } = require('../models/RTIApplication');
 const { Stage } = require('../models/Stage');
 const asyncHandler = require('../utils/asyncHandler');
-const { computeDeadlines, getDeadlineStatus } = require('../utils/deadline');
+const { computeDeadlines, getDeadlineStatus, getReminderRule } = require('../utils/deadline');
 
 const getDashboardStats = asyncHandler(async (_req, res) => {
   const all = await RTIApplication.find({}).lean();
@@ -27,6 +27,12 @@ const getDashboardStats = asyncHandler(async (_req, res) => {
 
   let overdue = 0;
   const upcomingDeadlines = [];
+  const reminderRules = {
+    t7: 0,
+    t3: 0,
+    t1: 0,
+    overdue: 0
+  };
 
   for (const rti of all) {
     const [firstAppealOrder, latestStage] = await Promise.all([
@@ -47,12 +53,24 @@ const getDashboardStats = asyncHandler(async (_req, res) => {
     const isClosed =
       rti.status === 'Case Closed' || rti.status === 'Closed' || closedStageIds.has(String(rti._id));
     const pioStatus = isClosed ? 'na' : getDeadlineStatus(deadlines.pioDeadline);
+    const reminderRule = isClosed ? null : getReminderRule(deadlines.pioDeadline);
 
-    if (pioStatus === 'overdue' && rti.status === 'RTI Filed') {
+    if (reminderRule === 'Overdue' && rti.status === 'RTI Filed') {
       overdue += 1;
+      reminderRules.overdue += 1;
     }
 
-    if (pioStatus !== 'overdue' && pioStatus !== 'na' && rti.status === 'RTI Filed') {
+    if (reminderRule === 'T-7') {
+      reminderRules.t7 += 1;
+    }
+    if (reminderRule === 'T-3') {
+      reminderRules.t3 += 1;
+    }
+    if (reminderRule === 'T-1') {
+      reminderRules.t1 += 1;
+    }
+
+    if (reminderRule && rti.status === 'RTI Filed') {
       upcomingDeadlines.push({
         rtiId: rti._id,
         rtiNumber: rti.rtiNumber,
@@ -60,7 +78,8 @@ const getDashboardStats = asyncHandler(async (_req, res) => {
         applicationDate: rti.applicationDate,
         deadlineType: 'PIO Response Deadline',
         deadlineDate: deadlines.pioDeadline,
-        status: pioStatus
+        status: pioStatus,
+        reminderRule
       });
     }
   }
@@ -97,7 +116,8 @@ const getDashboardStats = asyncHandler(async (_req, res) => {
       firstAppealsFiled: firstAppeals,
       secondAppealsFiled: secondAppeals,
       closedRtis: closed,
-      overdueRtis: overdue
+      overdueRtis: overdue,
+      reminders: reminderRules
     },
     charts: {
       filedPerYear: filedPerYear.map((item) => ({ year: String(item._id), count: item.count })),
@@ -105,7 +125,7 @@ const getDashboardStats = asyncHandler(async (_req, res) => {
       successVsPending
     },
     upcomingDeadlines: upcomingDeadlines
-      .sort((a, b) => new Date(a.applicationDate) - new Date(b.applicationDate))
+      .sort((a, b) => new Date(a.deadlineDate) - new Date(b.deadlineDate))
       .slice(0, 10)
   });
 });
