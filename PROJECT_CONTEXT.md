@@ -111,6 +111,8 @@ Add short entries like:
 - Risks to watch:
 - Running without tests may hide regressions.
 - Cloudinary/Atlas/Render env drift can break runtime after deploy.
+- Assistant response preference:
+- Always use compact mode by default (minimal tokens, concise replies, minimal progress chatter unless explicitly requested).
 - Suggested first prompt to paste:
 
 ```text

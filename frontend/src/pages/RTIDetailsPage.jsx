@@ -66,7 +66,10 @@ function DetailRow({ label, value }) {
 
   return (
     <Typography variant="body2" color="text.secondary">
-      {label}: {value}
+      <Box component="span" sx={{ fontWeight: 700, color: 'text.primary' }}>
+        {label}:
+      </Box>{' '}
+      {value}
     </Typography>
   );
 }
@@ -367,7 +370,6 @@ export default function RTIDetailsPage() {
                 <Typography variant="subtitle1" fontWeight={700} mb={1}>Applicant</Typography>
                 <DetailRow label="Name" value={selected.applicantName} />
                 <DetailRow label="Address" value={selected.applicantAddress} />
-                <DetailRow label="Filed Date" value={formatDate(selected.applicationDate)} />
                 <DetailRow label="Postal Reference" value={selected.postalTrackingNumber} />
               </Paper>
             </Grid2>
@@ -379,6 +381,7 @@ export default function RTIDetailsPage() {
                 <Typography variant="subtitle1" fontWeight={700} mb={1}>Public Information Officer</Typography>
                 <DetailRow label="Name" value={selected.pioName} />
                 <DetailRow label="Address" value={selected.pioAddress} />
+                <DetailRow label="Filed Date" value={formatDate(selected.applicationDate)} />
               </Paper>
             </Grid2>
           )}
