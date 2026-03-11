@@ -298,10 +298,21 @@ export default function RTIDetailsPage() {
       return selected?.status || '';
     }
 
+    const hasCaseClosedStage = stages.some((stage) => stage?.stageName === 'Case Closed');
+    if (hasCaseClosedStage) {
+      return 'Case Closed';
+    }
+
     const latest = [...stages].sort((a, b) => {
       const aTime = new Date(a?.stageDate || 0).getTime();
       const bTime = new Date(b?.stageDate || 0).getTime();
-      return bTime - aTime;
+      if (bTime !== aTime) {
+        return bTime - aTime;
+      }
+
+      const aUpdated = new Date(a?.updatedAt || a?.createdAt || 0).getTime();
+      const bUpdated = new Date(b?.updatedAt || b?.createdAt || 0).getTime();
+      return bUpdated - aUpdated;
     })[0];
 
     return latest?.stageName || selected?.status || '';
