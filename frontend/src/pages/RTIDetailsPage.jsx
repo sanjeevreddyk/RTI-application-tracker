@@ -285,7 +285,7 @@ export default function RTIDetailsPage() {
       return;
     }
 
-    await dispatch(addNote({ rtiId: id, ...noteForm }));
+    await dispatch(addNote({ rtiId: id, ...noteForm })).unwrap();
     setNoteForm((prev) => ({ ...prev, noteText: '' }));
   }
 
@@ -295,7 +295,7 @@ export default function RTIDetailsPage() {
       return;
     }
 
-    await dispatch(uploadDocuments({ rtiId: id, stageName: docStage, files }));
+    await dispatch(uploadDocuments({ rtiId: id, stageName: docStage, files })).unwrap();
     setFiles([]);
     setDocStage('General');
   }

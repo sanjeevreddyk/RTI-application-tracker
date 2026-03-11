@@ -5,6 +5,7 @@ import { BrowserRouter } from 'react-router-dom';
 import { CssBaseline, ThemeProvider, createTheme } from '@mui/material';
 import App from './App';
 import { store } from './app/store';
+import ToastHost from './components/ToastHost';
 
 const theme = createTheme({
   palette: {
@@ -84,6 +85,7 @@ ReactDOM.createRoot(document.getElementById('root')).render(
         <CssBaseline />
         <BrowserRouter>
           <App />
+          <ToastHost />
         </BrowserRouter>
       </ThemeProvider>
     </Provider>

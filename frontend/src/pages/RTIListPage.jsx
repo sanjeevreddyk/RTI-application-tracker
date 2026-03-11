@@ -170,7 +170,7 @@ export default function RTIListPage() {
       return;
     }
 
-    await dispatch(deleteRti(deleteTarget._id));
+    await dispatch(deleteRti(deleteTarget._id)).unwrap();
     closeDeleteConfirm();
     dispatch(fetchRtis(query));
   }

@@ -27,6 +27,8 @@ export default function EditRTIPage() {
   const navigate = useNavigate();
   const selected = useSelector((state) => state.rti.selected);
   const [form, setForm] = useState(empty);
+  const [submitError, setSubmitError] = useState('');
+  const [submitting, setSubmitting] = useState(false);
 
   useEffect(() => {
     dispatch(fetchRtiById(id));
@@ -48,8 +50,17 @@ export default function EditRTIPage() {
 
   async function onSubmit(event) {
     event.preventDefault();
-    await dispatch(updateRti({ id, payload: { ...form, applicationFee: Number(form.applicationFee) } }));
-    navigate(`/rtis/${id}`);
+    setSubmitError('');
+    setSubmitting(true);
+
+    try {
+      await dispatch(updateRti({ id, payload: { ...form, applicationFee: Number(form.applicationFee) } })).unwrap();
+      navigate(`/rtis/${id}`);
+    } catch (error) {
+      setSubmitError(typeof error === 'string' ? error : error?.message || 'Failed to update RTI');
+    } finally {
+      setSubmitting(false);
+    }
   }
 
   return (
@@ -60,6 +71,8 @@ export default function EditRTIPage() {
         onChange={onChange}
         onSubmit={onSubmit}
         submitLabel="Update RTI"
+        submitError={submitError}
+        submitting={submitting}
         secondaryActionLabel="Back"
         onSecondaryAction={() => navigate(`/rtis/${id}`)}
       />
