@@ -56,6 +56,9 @@ function getSuccessMessage(config, data) {
   if (method === 'post' && path === '/stage') {
     return 'Timeline stage saved';
   }
+  if (method === 'put' && path.startsWith('/stage/')) {
+    return 'Timeline stage updated';
+  }
   if (method === 'post' && path === '/document/upload') {
     const count = Array.isArray(data) ? data.length : null;
     return count ? `${count} document(s) uploaded` : 'Document upload completed';

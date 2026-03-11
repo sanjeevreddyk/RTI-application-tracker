@@ -9,6 +9,10 @@ import {
   Box,
   Button,
   Chip,
+  Dialog,
+  DialogActions,
+  DialogContent,
+  DialogTitle,
   Grid2,
   Link,
   MenuItem,
@@ -32,6 +36,7 @@ import {
   fetchNotes,
   fetchRtiById,
   fetchStages,
+  updateStage,
   removeDocument,
   uploadDocuments
 } from '../features/rti/rtiSlice';
@@ -94,6 +99,11 @@ export default function RTIDetailsPage() {
   const [docStage, setDocStage] = useState('General');
   const [files, setFiles] = useState([]);
   const [stageSubmitError, setStageSubmitError] = useState('');
+  const [editStageDialog, setEditStageDialog] = useState({
+    open: false,
+    stageName: '',
+    stageDate: ''
+  });
 
   useEffect(() => {
     dispatch(fetchRtiById(id));
@@ -347,6 +357,36 @@ export default function RTIDetailsPage() {
     setDocStage('General');
   }
 
+  function openEditStageDialog(stageRecord) {
+    setEditStageDialog({
+      open: true,
+      stageName: stageRecord.stageName,
+      stageDate: stageRecord.stageDate?.slice(0, 10) || getTodayDate()
+    });
+  }
+
+  function closeEditStageDialog() {
+    setEditStageDialog({ open: false, stageName: '', stageDate: '' });
+  }
+
+  async function saveStageDateEdit() {
+    if (!editStageDialog.stageName || !editStageDialog.stageDate) {
+      return;
+    }
+
+    await dispatch(
+      updateStage({
+        rtiId: id,
+        stageName: editStageDialog.stageName,
+        stageDate: editStageDialog.stageDate
+      })
+    ).unwrap();
+
+    closeEditStageDialog();
+    dispatch(fetchStages(id));
+    dispatch(fetchRtiById(id));
+  }
+
   return (
     <Stack spacing={2}>
       <Typography variant="h5" fontWeight={700}>RTI Case Details</Typography>
@@ -416,7 +456,7 @@ export default function RTIDetailsPage() {
         <Grid2 size={{ xs: 12, md: 6 }}>
           <Paper sx={{ p: 2 }}>
             <Typography variant="subtitle1" fontWeight={700} mb={1}>Case Timeline</Typography>
-            <Timeline stages={stages} />
+            <Timeline stages={stages} onEditStage={openEditStageDialog} />
           </Paper>
         </Grid2>
 
@@ -658,6 +698,41 @@ export default function RTIDetailsPage() {
           </Paper>
         </Grid2>
       </Grid2>
+
+      <Dialog open={editStageDialog.open} onClose={closeEditStageDialog}>
+        <DialogTitle>Edit Stage Date</DialogTitle>
+        <DialogContent sx={{ pt: 1, minWidth: { xs: 280, sm: 360 } }}>
+          <Stack spacing={1.5}>
+            <TextField
+              label="Stage"
+              value={editStageDialog.stageName}
+              disabled
+              fullWidth
+            />
+            <TextField
+              type="date"
+              label="Stage Date"
+              InputLabelProps={{ shrink: true }}
+              value={editStageDialog.stageDate}
+              onChange={(event) =>
+                setEditStageDialog((prev) => ({ ...prev, stageDate: event.target.value }))
+              }
+              fullWidth
+              required
+            />
+          </Stack>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={closeEditStageDialog}>Cancel</Button>
+          <Button
+            variant="contained"
+            onClick={saveStageDateEdit}
+            disabled={!editStageDialog.stageDate}
+          >
+            Save
+          </Button>
+        </DialogActions>
+      </Dialog>
     </Stack>
   );
 }

@@ -3,7 +3,7 @@ import { useDispatch, useSelector } from 'react-redux';
 import { useNavigate, useParams } from 'react-router-dom';
 import { Stack, Typography } from '@mui/material';
 import RTIForm from '../components/RTIForm';
-import { fetchRtiById, updateRti } from '../features/rti/rtiSlice';
+import { fetchRtiById, fetchStages, updateRti, updateStage } from '../features/rti/rtiSlice';
 
 const empty = {
   applicantName: '',
@@ -26,12 +26,14 @@ export default function EditRTIPage() {
   const dispatch = useDispatch();
   const navigate = useNavigate();
   const selected = useSelector((state) => state.rti.selected);
+  const stages = useSelector((state) => state.rti.stages);
   const [form, setForm] = useState(empty);
   const [submitError, setSubmitError] = useState('');
   const [submitting, setSubmitting] = useState(false);
 
   useEffect(() => {
     dispatch(fetchRtiById(id));
+    dispatch(fetchStages(id));
   }, [dispatch, id]);
 
   useEffect(() => {
@@ -45,6 +47,17 @@ export default function EditRTIPage() {
 
   function onChange(event) {
     const { name, value } = event.target;
+    if (name === 'status') {
+      const matchedStage = stages.find((stage) => stage.stageName === value);
+      const fallbackDate =
+        value === 'RTI Filed'
+          ? selected?.applicationDate?.slice(0, 10) || form.applicationDate
+          : matchedStage?.stageDate?.slice(0, 10) || form.applicationDate;
+
+      setForm((prev) => ({ ...prev, status: value, applicationDate: fallbackDate }));
+      return;
+    }
+
     setForm((prev) => ({ ...prev, [name]: value }));
   }
 
@@ -54,7 +67,27 @@ export default function EditRTIPage() {
     setSubmitting(true);
 
     try {
-      await dispatch(updateRti({ id, payload: { ...form, applicationFee: Number(form.applicationFee) } })).unwrap();
+      if (form.status && form.applicationDate) {
+        await dispatch(
+          updateStage({
+            rtiId: id,
+            stageName: form.status,
+            stageDate: form.applicationDate
+          })
+        ).unwrap();
+      }
+
+      const payload = {
+        ...form,
+        applicationFee: Number(form.applicationFee),
+        // Keep original filing date unless the edited status is RTI Filed.
+        applicationDate:
+          form.status === 'RTI Filed'
+            ? form.applicationDate
+            : selected?.applicationDate?.slice(0, 10) || form.applicationDate
+      };
+
+      await dispatch(updateRti({ id, payload })).unwrap();
       navigate(`/rtis/${id}`);
     } catch (error) {
       setSubmitError(typeof error === 'string' ? error : error?.message || 'Failed to update RTI');

@@ -43,6 +43,22 @@ export const addStage = createAsyncThunk('rti/addStage', async (payload) => {
   return data;
 });
 
+export const updateStage = createAsyncThunk(
+  'rti/updateStage',
+  async ({ rtiId, stageName, stageDate }, { rejectWithValue }) => {
+    try {
+      const { data } = await apiClient.post('/stage', {
+        rtiId,
+        stageName,
+        stageDate
+      });
+      return data;
+    } catch (error) {
+      return rejectWithValue(error?.response?.data?.message || error.message);
+    }
+  }
+);
+
 export const fetchDocuments = createAsyncThunk('rti/fetchDocuments', async (rtiId) => {
   const { data } = await apiClient.get(`/document/${rtiId}`);
   return data;
@@ -121,6 +137,11 @@ const rtiSlice = createSlice({
     });
     builder.addCase(addStage.fulfilled, (state, action) => {
       state.stages.push(action.payload);
+    });
+    builder.addCase(updateStage.fulfilled, (state, action) => {
+      state.stages = state.stages.map((stage) =>
+        stage._id === action.payload._id ? action.payload : stage
+      );
     });
     builder.addCase(fetchDocuments.fulfilled, (state, action) => {
       state.documents = action.payload;

@@ -1,4 +1,4 @@
-import { Box, Chip, Stack, Typography } from '@mui/material';
+import { Box, Button, Chip, Stack, Typography } from '@mui/material';
 import CheckCircleOutlineIcon from '@mui/icons-material/CheckCircleOutline';
 import RadioButtonUncheckedIcon from '@mui/icons-material/RadioButtonUnchecked';
 import { formatDate } from '../utils/date';
@@ -14,7 +14,7 @@ const STAGES = [
   'Case Closed'
 ];
 
-export default function Timeline({ stages }) {
+export default function Timeline({ stages, onEditStage }) {
   const done = new Set(stages.map((item) => item.stageName));
 
   return (
@@ -48,6 +48,16 @@ export default function Timeline({ stages }) {
                 <Typography variant="caption" color="text.secondary">
                   Tracking: {stageRecord.postalTrackingNumber}
                 </Typography>
+              )}
+              {stageRecord && (
+                <Button
+                  size="small"
+                  variant="text"
+                  onClick={() => onEditStage?.(stageRecord)}
+                  sx={{ p: 0, minWidth: 'auto' }}
+                >
+                  Edit
+                </Button>
               )}
             </Stack>
           </Box>

@@ -86,7 +86,37 @@ const getStagesByRti = asyncHandler(async (req, res) => {
   res.json(dedupedStages);
 });
 
+const updateStageByName = asyncHandler(async (req, res) => {
+  const { rtiId, stageName } = req.params;
+  const { stageDate } = req.body;
+
+  if (!stageDate) {
+    res.status(400);
+    throw new Error('stageDate is required');
+  }
+
+  const rti = await RTIApplication.findById(rtiId);
+  if (!rti) {
+    res.status(404);
+    throw new Error('RTI not found');
+  }
+
+  const stage = await Stage.findOneAndUpdate(
+    { rtiId, stageName },
+    { stageDate: new Date(stageDate) },
+    { new: true, runValidators: true }
+  );
+
+  if (!stage) {
+    res.status(404);
+    throw new Error('Stage not found');
+  }
+
+  res.json(stage);
+});
+
 module.exports = {
   createStage,
-  getStagesByRti
+  getStagesByRti,
+  updateStageByName
 };
