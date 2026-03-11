@@ -38,14 +38,18 @@ const buildFilters = (query) => {
 };
 
 const enrichRti = async (rtiDoc) => {
-  const [firstAppealOrder, caseClosedStage, latestStage] = await Promise.all([
-    Stage.findOne({
-      rtiId: rtiDoc._id,
-      stageName: 'First Appeal Order Received'
-    }).sort({ stageDate: -1 }),
+  const [caseClosedStage, firstAppealFiledStage, secondAppealFiledStage, latestStage] = await Promise.all([
     Stage.findOne({
       rtiId: rtiDoc._id,
       stageName: 'Case Closed'
+    }).sort({ stageDate: -1 }),
+    Stage.findOne({
+      rtiId: rtiDoc._id,
+      stageName: 'First Appeal Filed'
+    }).sort({ stageDate: -1 }),
+    Stage.findOne({
+      rtiId: rtiDoc._id,
+      stageName: 'Second Appeal Filed'
     }).sort({ stageDate: -1 }),
     Stage.findOne({
       rtiId: rtiDoc._id
@@ -54,12 +58,13 @@ const enrichRti = async (rtiDoc) => {
 
   const deadlines = computeDeadlines({
     applicationDate: rtiDoc.applicationDate,
-    latestStageDate: latestStage?.stageDate,
-    firstAppealOrderDate: firstAppealOrder?.stageDate
+    firstAppealFiledDate: firstAppealFiledStage?.stageDate,
+    secondAppealFiledDate: secondAppealFiledStage?.stageDate
   });
   const isClosed = rtiDoc.status === 'Case Closed' || rtiDoc.status === 'Closed' || Boolean(caseClosedStage);
-  const effectiveStatus = isClosed ? 'Case Closed' : rtiDoc.status;
+  const effectiveStatus = isClosed ? 'Case Closed' : latestStage?.stageName || rtiDoc.status;
   const pioDeadlineStatus = isClosed ? 'na' : getDeadlineStatus(deadlines.pioDeadline);
+  const firstAppealDeadlineStatus = isClosed ? 'na' : getDeadlineStatus(deadlines.firstAppealDeadline);
   const secondAppealDeadlineStatus = isClosed
     ? 'na'
     : getDeadlineStatus(deadlines.secondAppealEligibleOn);
@@ -74,6 +79,8 @@ const enrichRti = async (rtiDoc) => {
       pioDeadlineStatus,
       pioReminderRule,
       firstAppealEligibleOn: deadlines.firstAppealEligibleOn,
+      firstAppealDeadline: deadlines.firstAppealDeadline,
+      firstAppealDeadlineStatus,
       secondAppealEligibleOn: deadlines.secondAppealEligibleOn,
       secondAppealDeadlineStatus,
       secondAppealReminderRule
@@ -97,15 +104,15 @@ const createRti = asyncHandler(async (req, res) => {
 const getRtis = asyncHandler(async (req, res) => {
   const requestedStatus = String(req.query.status || '').trim();
   const filters = buildFilters(req.query);
-  if (requestedStatus === 'Case Closed') {
+  if (requestedStatus) {
     delete filters.status;
   }
   const list = await RTIApplication.find(filters).sort({ applicationDate: -1 });
 
   let enriched = await Promise.all(list.map((rti) => enrichRti(rti)));
 
-  if (requestedStatus === 'Case Closed') {
-    enriched = enriched.filter((item) => item.status === 'Case Closed');
+  if (requestedStatus) {
+    enriched = enriched.filter((item) => item.status === requestedStatus);
   }
 
   const overdueParam = String(req.query.overdue || '').toLowerCase();

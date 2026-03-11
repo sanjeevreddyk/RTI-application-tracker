@@ -15,15 +15,10 @@ const getDashboardStats = asyncHandler(async (_req, res) => {
   const closedStageIds = new Set(caseClosedStages.map((item) => String(item.rtiId)));
 
   const total = all.length;
-  const pendingPio = all.filter(
-    (rti) => rti.status === 'RTI Filed' && !closedStageIds.has(String(rti._id))
-  ).length;
-  const firstAppeals = all.filter((rti) => rti.status === 'First Appeal Filed' || rti.status === 'First Appeal Order Received').length;
-  const secondAppeals = all.filter((rti) => rti.status.startsWith('Second Appeal')).length;
-  const closed = all.filter(
-    (rti) =>
-      rti.status === 'Case Closed' || rti.status === 'Closed' || closedStageIds.has(String(rti._id))
-  ).length;
+  let pendingPio = 0;
+  let firstAppeals = 0;
+  let secondAppeals = 0;
+  let closed = 0;
 
   let overdue = 0;
   const upcomingDeadlines = [];
@@ -35,10 +30,14 @@ const getDashboardStats = asyncHandler(async (_req, res) => {
   };
 
   for (const rti of all) {
-    const [firstAppealOrder, latestStage] = await Promise.all([
+    const [firstAppealFiledStage, secondAppealFiledStage, latestStage] = await Promise.all([
       Stage.findOne({
         rtiId: rti._id,
-        stageName: 'First Appeal Order Received'
+        stageName: 'First Appeal Filed'
+      }).sort({ stageDate: -1 }),
+      Stage.findOne({
+        rtiId: rti._id,
+        stageName: 'Second Appeal Filed'
       }).sort({ stageDate: -1 }),
       Stage.findOne({
         rtiId: rti._id
@@ -47,15 +46,30 @@ const getDashboardStats = asyncHandler(async (_req, res) => {
 
     const deadlines = computeDeadlines({
       applicationDate: rti.applicationDate,
-      latestStageDate: latestStage?.stageDate,
-      firstAppealOrderDate: firstAppealOrder?.stageDate
+      firstAppealFiledDate: firstAppealFiledStage?.stageDate,
+      secondAppealFiledDate: secondAppealFiledStage?.stageDate
     });
     const isClosed =
       rti.status === 'Case Closed' || rti.status === 'Closed' || closedStageIds.has(String(rti._id));
+    const effectiveStatus = isClosed ? 'Case Closed' : latestStage?.stageName || rti.status;
+
+    if (effectiveStatus === 'Case Closed') {
+      closed += 1;
+    }
+    if (effectiveStatus === 'RTI Filed') {
+      pendingPio += 1;
+    }
+    if (effectiveStatus === 'First Appeal Filed' || effectiveStatus === 'First Appeal Order Received') {
+      firstAppeals += 1;
+    }
+    if (String(effectiveStatus || '').startsWith('Second Appeal')) {
+      secondAppeals += 1;
+    }
+
     const pioStatus = isClosed ? 'na' : getDeadlineStatus(deadlines.pioDeadline);
     const reminderRule = isClosed ? null : getReminderRule(deadlines.pioDeadline);
 
-    if (reminderRule === 'Overdue' && rti.status === 'RTI Filed') {
+    if (reminderRule === 'Overdue' && effectiveStatus === 'RTI Filed') {
       overdue += 1;
       reminderRules.overdue += 1;
     }
@@ -70,7 +84,7 @@ const getDashboardStats = asyncHandler(async (_req, res) => {
       reminderRules.t1 += 1;
     }
 
-    if (reminderRule && rti.status === 'RTI Filed') {
+    if (reminderRule && effectiveStatus === 'RTI Filed') {
       upcomingDeadlines.push({
         rtiId: rti._id,
         rtiNumber: rti.rtiNumber,
@@ -78,7 +92,7 @@ const getDashboardStats = asyncHandler(async (_req, res) => {
         applicationDate: rti.applicationDate,
         deadlineType: 'PIO Response Deadline',
         deadlineDate: deadlines.pioDeadline,
-        status: pioStatus,
+        status: effectiveStatus,
         reminderRule
       });
     }

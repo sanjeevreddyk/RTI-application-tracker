@@ -57,11 +57,48 @@ const stageNames = [
 const trackingStages = new Set(['First Appeal Filed', 'Second Appeal Filed']);
 const firstAppealStage = 'First Appeal Filed';
 const secondAppealStage = 'Second Appeal Filed';
+const BASE_DEADLINE_DAYS = 30;
+const DEADLINE_BUFFER_DAYS = 10;
+const PIO_DEADLINE_DAYS = BASE_DEADLINE_DAYS + DEADLINE_BUFFER_DAYS;
+const FIRST_APPEAL_DEADLINE_DAYS = BASE_DEADLINE_DAYS + DEADLINE_BUFFER_DAYS;
+const SECOND_APPEAL_DEADLINE_DAYS = BASE_DEADLINE_DAYS + DEADLINE_BUFFER_DAYS;
 
 function getTodayDate() {
   const now = new Date();
   const local = new Date(now.getTime() - now.getTimezoneOffset() * 60000);
   return local.toISOString().slice(0, 10);
+}
+
+function addDays(value, days) {
+  if (!value) {
+    return null;
+  }
+
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) {
+    return null;
+  }
+
+  date.setDate(date.getDate() + days);
+  return date;
+}
+
+function getDeadlineStatus(value) {
+  if (!value) {
+    return 'na';
+  }
+
+  const now = new Date();
+  const target = new Date(value);
+  const days = Math.ceil((target - now) / (1000 * 60 * 60 * 24));
+
+  if (days < 0) {
+    return 'overdue';
+  }
+  if (days <= 5) {
+    return 'warning';
+  }
+  return 'on_track';
 }
 
 function DetailRow({ label, value }) {
@@ -112,7 +149,6 @@ export default function RTIDetailsPage() {
     dispatch(fetchNotes(id));
   }, [dispatch, id]);
 
-  const pioChip = useMemo(() => deadlineChip(selected?.deadlines?.pioDeadlineStatus), [selected]);
   const stageOptions = useMemo(() => ['General', ...stageNames], []);
   const resolveDocumentUrl = (filePath) => {
     if (!filePath) {
@@ -230,6 +266,43 @@ export default function RTIDetailsPage() {
       secondAppealInfo.filedDate ||
       secondAppealInfo.postalTrackingNumber
   );
+  const pioDeadline = useMemo(
+    () => addDays(selected?.applicationDate, PIO_DEADLINE_DAYS),
+    [selected?.applicationDate]
+  );
+  const firstAppealDeadline = useMemo(
+    () => addDays(firstAppealInfo.filedDate, FIRST_APPEAL_DEADLINE_DAYS),
+    [firstAppealInfo.filedDate]
+  );
+  const secondAppealDeadline = useMemo(
+    () => addDays(secondAppealInfo.filedDate, SECOND_APPEAL_DEADLINE_DAYS),
+    [secondAppealInfo.filedDate]
+  );
+  const pioChip = useMemo(() => deadlineChip(getDeadlineStatus(pioDeadline)), [pioDeadline]);
+  const firstAppealChip = useMemo(
+    () => deadlineChip(getDeadlineStatus(firstAppealDeadline)),
+    [firstAppealDeadline]
+  );
+  const secondAppealChip = useMemo(
+    () => deadlineChip(getDeadlineStatus(secondAppealDeadline)),
+    [secondAppealDeadline]
+  );
+  const hasFirstAppealDeadline = Boolean(firstAppealInfo.filedDate && firstAppealDeadline);
+  const hasSecondAppealDeadline = Boolean(secondAppealInfo.filedDate && secondAppealDeadline);
+  const latestStageName = useMemo(() => {
+    if (!stages.length) {
+      return selected?.status || '';
+    }
+
+    const latest = [...stages].sort((a, b) => {
+      const aTime = new Date(a?.stageDate || 0).getTime();
+      const bTime = new Date(b?.stageDate || 0).getTime();
+      return bTime - aTime;
+    })[0];
+
+    return latest?.stageName || selected?.status || '';
+  }, [stages, selected?.status]);
+  const isCaseClosed = latestStageName === 'Case Closed';
 
   const resolveDocumentStageDate = (doc) => {
     if (doc?.stageId && stageDateById.has(String(doc.stageId))) {
@@ -395,9 +468,23 @@ export default function RTIDetailsPage() {
         <Paper sx={{ p: 2 }}>
           <Typography variant="h6">{selected.rtiNumber} - {selected.subject}</Typography>
           <Typography variant="body2" color="text.secondary">Department: {selected.department}</Typography>
-          <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1} mt={1}>
-            <Chip label={`Status: ${selected.status}`} />
-            <Chip label={`PIO Deadline: ${formatDate(selected.deadlines?.pioDeadline)}`} color={pioChip.color} />
+          <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1} mt={1} flexWrap="wrap">
+            <Chip label={`Status: ${latestStageName || selected.status}`} />
+            {!isCaseClosed && (
+              <Chip label={`PIO Deadline: ${formatDate(pioDeadline)}`} color={pioChip.color} />
+            )}
+            {!isCaseClosed && hasFirstAppealDeadline && (
+              <Chip
+                label={`First Appeal Deadline: ${formatDate(firstAppealDeadline)}`}
+                color={firstAppealChip.color}
+              />
+            )}
+            {!isCaseClosed && hasSecondAppealDeadline && (
+              <Chip
+                label={`Second Appeal Deadline: ${formatDate(secondAppealDeadline)}`}
+                color={secondAppealChip.color}
+              />
+            )}
           </Stack>
         </Paper>
       )}
