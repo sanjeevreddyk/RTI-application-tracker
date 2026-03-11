@@ -9,10 +9,12 @@ import {
   Box,
   Button,
   Chip,
+  Checkbox,
   Dialog,
   DialogActions,
   DialogContent,
   DialogTitle,
+  FormControlLabel,
   Grid2,
   Link,
   MenuItem,
@@ -129,7 +131,8 @@ export default function RTIDetailsPage() {
     firstAppealAuthority: '',
     firstAppealAuthorityAddress: '',
     secondAppealAuthority: '',
-    secondAppealAuthorityAddress: ''
+    secondAppealAuthorityAddress: '',
+    closeCaseSatisfied: false
   });
   const [stageFiles, setStageFiles] = useState([]);
   const [noteForm, setNoteForm] = useState({ noteText: '', author: 'System User' });
@@ -210,6 +213,7 @@ export default function RTIDetailsPage() {
     return map;
   }, [stages]);
   const showStagePostalTracking = trackingStages.has(stageForm.stageName);
+  const showCloseCaseSatisfied = stageForm.stageName === 'PIO Response Received';
   const showFirstAppealAuthority = stageForm.stageName === firstAppealStage;
   const showSecondAppealAuthority = stageForm.stageName === secondAppealStage;
   const isCaseClosedStage = stageForm.stageName === 'Case Closed';
@@ -399,7 +403,8 @@ export default function RTIDetailsPage() {
         firstAppealAuthority: '',
         firstAppealAuthorityAddress: '',
         secondAppealAuthority: '',
-        secondAppealAuthorityAddress: ''
+        secondAppealAuthorityAddress: '',
+        closeCaseSatisfied: false
       });
       setStageFiles([]);
       dispatch(fetchRtiById(id));
@@ -567,7 +572,9 @@ export default function RTIDetailsPage() {
                         e.target.value === firstAppealStage ? p.firstAppealAuthorityAddress : '',
                       secondAppealAuthority: e.target.value === secondAppealStage ? p.secondAppealAuthority : '',
                       secondAppealAuthorityAddress:
-                        e.target.value === secondAppealStage ? p.secondAppealAuthorityAddress : ''
+                        e.target.value === secondAppealStage ? p.secondAppealAuthorityAddress : '',
+                      closeCaseSatisfied:
+                        e.target.value === 'PIO Response Received' ? p.closeCaseSatisfied : false
                     }))
                   }
                 >
@@ -583,6 +590,19 @@ export default function RTIDetailsPage() {
                     onChange={(e) =>
                       setStageForm((p) => ({ ...p, postalTrackingNumber: e.target.value }))
                     }
+                  />
+                )}
+                {showCloseCaseSatisfied && (
+                  <FormControlLabel
+                    control={
+                      <Checkbox
+                        checked={Boolean(stageForm.closeCaseSatisfied)}
+                        onChange={(e) =>
+                          setStageForm((p) => ({ ...p, closeCaseSatisfied: e.target.checked }))
+                        }
+                      />
+                    }
+                    label="Satisfied with the response and close case"
                   />
                 )}
                 {showFirstAppealAuthority && (

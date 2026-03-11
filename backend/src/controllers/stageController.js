@@ -12,7 +12,8 @@ const createStage = asyncHandler(async (req, res) => {
     firstAppealAuthority,
     firstAppealAuthorityAddress,
     secondAppealAuthority,
-    secondAppealAuthorityAddress
+    secondAppealAuthorityAddress,
+    closeCaseSatisfied
   } = req.body;
 
   const rti = await RTIApplication.findById(rtiId);
@@ -56,6 +57,25 @@ const createStage = asyncHandler(async (req, res) => {
 
   if (stageToStatusMap[stageName]) {
     rti.status = stageToStatusMap[stageName];
+    await rti.save();
+  }
+
+  if (stageName === 'PIO Response Received' && Boolean(closeCaseSatisfied)) {
+    await Stage.findOneAndUpdate(
+      { rtiId, stageName: 'Case Closed' },
+      {
+        stageDate,
+        description: 'Case closed as applicant is satisfied with PIO response',
+        postalTrackingNumber: '',
+        firstAppealAuthority: '',
+        firstAppealAuthorityAddress: '',
+        secondAppealAuthority: '',
+        secondAppealAuthorityAddress: ''
+      },
+      { new: true, upsert: true, runValidators: true, setDefaultsOnInsert: true }
+    );
+
+    rti.status = 'Case Closed';
     await rti.save();
   }
 
