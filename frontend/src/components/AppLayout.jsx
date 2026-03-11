@@ -30,6 +30,7 @@ import LogoutIcon from '@mui/icons-material/Logout';
 import KeyboardDoubleArrowLeftIcon from '@mui/icons-material/KeyboardDoubleArrowLeft';
 import KeyboardDoubleArrowRightIcon from '@mui/icons-material/KeyboardDoubleArrowRight';
 import { logout } from '../features/auth/authSlice';
+import { showInfoToast } from '../utils/toast';
 
 const drawerWidth = 250;
 const drawerCollapsedWidth = 76;
@@ -226,6 +227,7 @@ export default function AppLayout({ children }) {
                 startIcon={<LogoutIcon />}
                 onClick={() => {
                   dispatch(logout());
+                  showInfoToast('Logged out successfully');
                   navigate('/login');
                 }}
               >

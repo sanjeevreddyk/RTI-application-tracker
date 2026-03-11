@@ -31,7 +31,9 @@ export const register = createAsyncThunk('auth/register', async (payload, { reje
 
 export const fetchMe = createAsyncThunk('auth/me', async (_, { rejectWithValue }) => {
   try {
-    const { data } = await apiClient.get('/auth/me');
+    const { data } = await apiClient.get('/auth/me', {
+      toast: { disableSuccess: true, disableError: true }
+    });
     return data;
   } catch (error) {
     return rejectWithValue(error?.response?.data?.message || error.message);
