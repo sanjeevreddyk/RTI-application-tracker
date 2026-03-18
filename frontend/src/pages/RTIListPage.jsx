@@ -27,6 +27,7 @@ import {
 import { deleteRti, fetchRtis } from '../features/rti/rtiSlice';
 import { downloadCsv, downloadPdf } from '../api/downloads';
 import { deadlineChip, formatDate } from '../utils/date';
+import { formatRtiNumber } from '../utils/rtiNumber';
 
 const statusOptions = ['', 'RTI Filed', 'PIO Response Received', 'First Appeal Filed', 'First Appeal Order Received', 'Second Appeal Filed', 'Second Appeal Hearing', 'Second Appeal Order', 'Case Closed'];
 
@@ -268,7 +269,9 @@ export default function RTIListPage() {
                 sx={{ p: 1.5, ...deadlineRowSx(stageDeadlineStatus) }}
               >
                 <Stack spacing={0.75}>
-                  <Typography variant="subtitle2" fontWeight={700}>{item.rtiNumber}</Typography>
+                  <Typography variant="subtitle2" fontWeight={700}>
+                    {formatRtiNumber(item.rtiNumber, item.applicationDate)}
+                  </Typography>
                   <Typography variant="body2">{item.subject}</Typography>
                   <Typography variant="caption" color="text.secondary">{item.department}</Typography>
                   <Typography variant="caption">Filed: {formatDate(item.applicationDate)}</Typography>
@@ -373,7 +376,7 @@ export default function RTIListPage() {
                       hover
                       sx={deadlineRowSx(stageDeadlineStatus)}
                     >
-                      <TableCell>{item.rtiNumber}</TableCell>
+                      <TableCell>{formatRtiNumber(item.rtiNumber, item.applicationDate)}</TableCell>
                       <TableCell>{item.subject}</TableCell>
                       <TableCell>{item.department}</TableCell>
                       <TableCell>{formatDate(item.applicationDate)}</TableCell>
@@ -413,7 +416,11 @@ export default function RTIListPage() {
         <DialogTitle>Confirm Delete</DialogTitle>
         <DialogContent>
           <DialogContentText>
-            Delete RTI application {deleteTarget?.rtiNumber ? `(${deleteTarget.rtiNumber})` : ''}? This action cannot be undone.
+            Delete RTI application{' '}
+            {deleteTarget?.rtiNumber
+              ? `(${formatRtiNumber(deleteTarget.rtiNumber, deleteTarget.applicationDate)})`
+              : ''}
+            ? This action cannot be undone.
           </DialogContentText>
         </DialogContent>
         <DialogActions>

@@ -7,6 +7,7 @@ const Note = require('../models/Note');
 const asyncHandler = require('../utils/asyncHandler');
 const { computeDeadlines, getDeadlineStatus, getReminderRule } = require('../utils/deadline');
 const { destroyByPublicId } = require('../config/cloudinary');
+const { normalizeRtiNumber } = require('../utils/rtiNumber');
 
 const FIRST_APPEAL_STATUSES = new Set(['First Appeal Filed', 'First Appeal Order Received']);
 const SECOND_APPEAL_STATUSES = new Set([
@@ -132,6 +133,7 @@ const enrichRti = async (rtiDoc) => {
 
   return {
     ...rtiDoc.toObject(),
+    rtiNumber: normalizeRtiNumber(rtiDoc.rtiNumber, rtiDoc.applicationDate),
     status: effectiveStatus,
     deadlines: {
       pioDeadline: deadlines.pioDeadline,
@@ -150,7 +152,11 @@ const enrichRti = async (rtiDoc) => {
 };
 
 const createRti = asyncHandler(async (req, res) => {
-  const rti = await RTIApplication.create(req.body);
+  const payload = {
+    ...req.body,
+    rtiNumber: normalizeRtiNumber(req.body.rtiNumber, req.body.applicationDate)
+  };
+  const rti = await RTIApplication.create(payload);
 
   await Stage.create({
     rtiId: rti._id,
@@ -201,7 +207,15 @@ const getRtiById = asyncHandler(async (req, res) => {
 });
 
 const updateRti = asyncHandler(async (req, res) => {
-  const rti = await RTIApplication.findByIdAndUpdate(req.params.id, req.body, {
+  const payload = { ...req.body };
+  if (payload.rtiNumber) {
+    payload.rtiNumber = normalizeRtiNumber(
+      payload.rtiNumber,
+      payload.applicationDate
+    );
+  }
+
+  const rti = await RTIApplication.findByIdAndUpdate(req.params.id, payload, {
     new: true,
     runValidators: true
   });

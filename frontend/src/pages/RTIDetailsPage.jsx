@@ -45,6 +45,7 @@ import {
 import { downloadDraft } from '../api/downloads';
 import { fileBaseUrl } from '../api/client';
 import { deadlineChip, formatDate } from '../utils/date';
+import { formatRtiNumber } from '../utils/rtiNumber';
 
 const stageNames = [
   'RTI Filed',
@@ -482,7 +483,9 @@ export default function RTIDetailsPage() {
 
       {selected && (
         <Paper sx={{ p: 2 }}>
-          <Typography variant="h6">{selected.rtiNumber} - {selected.subject}</Typography>
+          <Typography variant="h6">
+            {formatRtiNumber(selected.rtiNumber, selected.applicationDate)} - {selected.subject}
+          </Typography>
           <Typography variant="body2" color="text.secondary">Department: {selected.department}</Typography>
           <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1} mt={1} flexWrap="wrap">
             <Chip label={`Status: ${latestStageName || selected.status}`} />

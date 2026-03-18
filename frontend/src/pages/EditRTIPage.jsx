@@ -4,6 +4,7 @@ import { useNavigate, useParams } from 'react-router-dom';
 import { Stack, Typography } from '@mui/material';
 import RTIForm from '../components/RTIForm';
 import { fetchRtiById, fetchStages, updateRti, updateStage } from '../features/rti/rtiSlice';
+import { formatRtiNumber } from '../utils/rtiNumber';
 
 const empty = {
   applicantName: '',
@@ -40,6 +41,7 @@ export default function EditRTIPage() {
     if (selected && selected._id === id) {
       setForm({
         ...selected,
+        rtiNumber: formatRtiNumber(selected.rtiNumber, selected.applicationDate),
         applicationDate: selected.applicationDate?.slice(0, 10)
       });
     }
@@ -79,6 +81,7 @@ export default function EditRTIPage() {
 
       const payload = {
         ...form,
+        rtiNumber: formatRtiNumber(form.rtiNumber, form.applicationDate),
         applicationFee: Number(form.applicationFee),
         // Keep original filing date unless the edited status is RTI Filed.
         applicationDate:

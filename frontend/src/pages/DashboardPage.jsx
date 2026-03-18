@@ -31,6 +31,7 @@ import {
 } from 'recharts';
 import { fetchDashboard } from '../features/dashboard/dashboardSlice';
 import { formatDate } from '../utils/date';
+import { formatRtiNumber } from '../utils/rtiNumber';
 
 const COLORS = ['#0f5cc0', '#2f855a', '#b7791f', '#c53030'];
 
@@ -220,7 +221,7 @@ export default function DashboardPage() {
             <TableBody>
               {sortedUpcomingDeadlines.map((item) => (
                 <TableRow key={`${item.rtiId}-${item.deadlineType}`}>
-                  <TableCell>{item.rtiNumber}</TableCell>
+                  <TableCell>{formatRtiNumber(item.rtiNumber, item.applicationDate)}</TableCell>
                   <TableCell>{item.department}</TableCell>
                   <TableCell>{formatDate(item.applicationDate)}</TableCell>
                   <TableCell>{formatDate(item.deadlineDate)}</TableCell>

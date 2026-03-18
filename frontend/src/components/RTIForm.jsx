@@ -181,7 +181,16 @@ export default function RTIForm({
             <TextField fullWidth label="RTI Subject" name="subject" value={value.subject} onChange={onChange} required />
           </Grid2>
           <Grid2 size={{ xs: 12, md: 6 }}>
-            <TextField fullWidth label="RTI Application Number" name="rtiNumber" value={value.rtiNumber} onChange={onChange} required />
+            <TextField
+              fullWidth
+              label="RTI Application Number"
+              name="rtiNumber"
+              value={value.rtiNumber}
+              onChange={onChange}
+              placeholder="RTI/2026/06"
+              helperText="Format: RTI/YYYY/NN"
+              required
+            />
           </Grid2>
           <Grid2 size={{ xs: 12, md: 6 }}>
             <TextField fullWidth type="date" label="Application Date" name="applicationDate" value={value.applicationDate} onChange={onChange} InputLabelProps={{ shrink: true }} required />

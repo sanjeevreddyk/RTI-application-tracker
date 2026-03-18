@@ -4,6 +4,7 @@ import { useNavigate } from 'react-router-dom';
 import { Stack, Typography } from '@mui/material';
 import RTIForm from '../components/RTIForm';
 import { createRti, fetchRtis, uploadDocuments } from '../features/rti/rtiSlice';
+import { formatRtiNumber, getNextRtiNumberForYear } from '../utils/rtiNumber';
 
 function getTodayDate() {
   const now = new Date();
@@ -26,22 +27,6 @@ const initial = {
   remarks: '',
   status: 'RTI Filed'
 };
-
-function getNextRtiNumber(items) {
-  const maxSerial = (items || []).reduce((max, item) => {
-    const value = String(item?.rtiNumber || '').trim();
-    const match = /^RTI(\d+)$/i.exec(value);
-    if (!match) {
-      return max;
-    }
-
-    const serial = Number(match[1]);
-    return Number.isNaN(serial) ? max : Math.max(max, serial);
-  }, 0);
-
-  const nextSerial = maxSerial + 1;
-  return `RTI${String(nextSerial).padStart(3, '0')}`;
-}
 
 export default function AddRTIPage() {
   const dispatch = useDispatch();
@@ -78,14 +63,14 @@ export default function AddRTIPage() {
           return;
         }
 
-        const nextNumber = getNextRtiNumber(list);
+        const nextNumber = getNextRtiNumberForYear(list, form.applicationDate);
         setForm((prev) => (prev.rtiNumber ? prev : { ...prev, rtiNumber: nextNumber }));
       } catch (_error) {
         if (cancelled) {
           return;
         }
 
-        setForm((prev) => (prev.rtiNumber ? prev : { ...prev, rtiNumber: 'RTI001' }));
+        setForm((prev) => (prev.rtiNumber ? prev : { ...prev, rtiNumber: getNextRtiNumberForYear([], form.applicationDate) }));
       }
     }
 
@@ -98,7 +83,16 @@ export default function AddRTIPage() {
 
   function onChange(event) {
     const { name, value } = event.target;
-    setForm((prev) => ({ ...prev, [name]: value }));
+    setForm((prev) => {
+      const next = { ...prev, [name]: value };
+      if (name === 'rtiNumber') {
+        next.rtiNumber = formatRtiNumber(value, next.applicationDate);
+      }
+      if (name === 'applicationDate' && next.rtiNumber) {
+        next.rtiNumber = formatRtiNumber(next.rtiNumber, value);
+      }
+      return next;
+    });
   }
 
   async function onSubmit(event) {
@@ -136,7 +130,11 @@ export default function AddRTIPage() {
     setSubmitting(true);
     try {
       const created = await dispatch(
-        createRti({ ...form, applicationFee: Number(form.applicationFee) })
+        createRti({
+          ...form,
+          rtiNumber: formatRtiNumber(form.rtiNumber, form.applicationDate),
+          applicationFee: Number(form.applicationFee)
+        })
       ).unwrap();
 
       if (initialFiles.length) {

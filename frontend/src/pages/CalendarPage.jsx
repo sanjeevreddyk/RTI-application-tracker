@@ -3,6 +3,7 @@ import { useDispatch, useSelector } from 'react-redux';
 import { Chip, Paper, Stack, Typography } from '@mui/material';
 import { fetchDashboard } from '../features/dashboard/dashboardSlice';
 import { deadlineChip, formatDate } from '../utils/date';
+import { formatRtiNumber } from '../utils/rtiNumber';
 
 export default function CalendarPage() {
   const dispatch = useDispatch();
@@ -24,7 +25,9 @@ export default function CalendarPage() {
           >
             <Stack direction="row" justifyContent="space-between" alignItems="center">
               <div>
-                <Typography fontWeight={600}>{item.rtiNumber}</Typography>
+                <Typography fontWeight={600}>
+                  {formatRtiNumber(item.rtiNumber, item.applicationDate)}
+                </Typography>
                 <Typography variant="body2" color="text.secondary">{item.department} | {item.deadlineType}</Typography>
                 <Typography variant="body2">Due: {formatDate(item.deadlineDate)}</Typography>
               </div>
