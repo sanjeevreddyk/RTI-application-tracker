@@ -78,6 +78,26 @@ function deadlineRowSx(deadlineStatus) {
   return {};
 }
 
+function getStageDeadline(item) {
+  return (
+    item?.deadlines?.currentStageDeadline ||
+    item?.deadlines?.pioDeadline ||
+    item?.deadlines?.firstAppealDeadline ||
+    item?.deadlines?.secondAppealEligibleOn ||
+    null
+  );
+}
+
+function getStageDeadlineStatus(item) {
+  return (
+    item?.deadlines?.currentStageDeadlineStatus ||
+    item?.deadlines?.pioDeadlineStatus ||
+    item?.deadlines?.firstAppealDeadlineStatus ||
+    item?.deadlines?.secondAppealDeadlineStatus ||
+    'na'
+  );
+}
+
 export default function RTIListPage() {
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down('md'));
@@ -117,7 +137,7 @@ export default function RTIListPage() {
         }
 
         if (sortBy === 'pioDeadline') {
-          return new Date(item.deadlines?.pioDeadline || 0).getTime();
+          return new Date(getStageDeadline(item) || 0).getTime();
         }
 
         return String(item[sortBy] || '').toLowerCase();
@@ -239,9 +259,14 @@ export default function RTIListPage() {
       {isMobile ? (
         <Stack spacing={1.25}>
           {!loading && sortedDisplayList.map((item) => {
-            const chipData = deadlineChip(item.deadlines?.pioDeadlineStatus);
+            const stageDeadline = getStageDeadline(item);
+            const stageDeadlineStatus = getStageDeadlineStatus(item);
+            const chipData = deadlineChip(stageDeadlineStatus);
             return (
-              <Paper key={item._id} sx={{ p: 1.5, ...deadlineRowSx(item.deadlines?.pioDeadlineStatus) }}>
+              <Paper
+                key={item._id}
+                sx={{ p: 1.5, ...deadlineRowSx(stageDeadlineStatus) }}
+              >
                 <Stack spacing={0.75}>
                   <Typography variant="subtitle2" fontWeight={700}>{item.rtiNumber}</Typography>
                   <Typography variant="body2">{item.subject}</Typography>
@@ -252,11 +277,15 @@ export default function RTIListPage() {
                     <Chip size="small" variant="outlined" color={statusChipColor(item.status)} label={item.status} />
                   </Stack>
                   <Stack direction="row" spacing={1} alignItems="center" flexWrap="wrap">
-                    <Typography variant="caption">PIO Deadline:</Typography>
+                    <Typography variant="caption">Stage Deadline:</Typography>
                     <Typography variant="caption" fontWeight={600}>
-                      {formatDate(item.deadlines?.pioDeadline)}
+                      {formatDate(stageDeadline)}
                     </Typography>
-                    <Chip size="small" color={deadlineChipColor(item.deadlines?.pioDeadlineStatus)} label={chipData.label} />
+                    <Chip
+                      size="small"
+                      color={deadlineChipColor(stageDeadlineStatus)}
+                      label={chipData.label}
+                    />
                   </Stack>
                   <Stack direction="row" spacing={1} flexWrap="wrap">
                     <Button size="small" component={Link} to={`/rtis/${item._id}`}>View</Button>
@@ -327,7 +356,7 @@ export default function RTIListPage() {
                       direction={sortBy === 'pioDeadline' ? sortDir : 'asc'}
                       onClick={() => handleSort('pioDeadline')}
                     >
-                      PIO Deadline
+                      Stage Deadline
                     </TableSortLabel>
                   </TableCell>
                   <TableCell>Actions</TableCell>
@@ -335,9 +364,15 @@ export default function RTIListPage() {
               </TableHead>
               <TableBody>
                 {!loading && sortedDisplayList.map((item) => {
-                  const chipData = deadlineChip(item.deadlines?.pioDeadlineStatus);
+                  const stageDeadline = getStageDeadline(item);
+                  const stageDeadlineStatus = getStageDeadlineStatus(item);
+                  const chipData = deadlineChip(stageDeadlineStatus);
                   return (
-                    <TableRow key={item._id} hover sx={deadlineRowSx(item.deadlines?.pioDeadlineStatus)}>
+                    <TableRow
+                      key={item._id}
+                      hover
+                      sx={deadlineRowSx(stageDeadlineStatus)}
+                    >
                       <TableCell>{item.rtiNumber}</TableCell>
                       <TableCell>{item.subject}</TableCell>
                       <TableCell>{item.department}</TableCell>
@@ -348,9 +383,13 @@ export default function RTIListPage() {
                       <TableCell>
                         <Stack direction="row" spacing={1} alignItems="center">
                           <Typography variant="body2" fontWeight={600}>
-                            {formatDate(item.deadlines?.pioDeadline)}
+                            {formatDate(stageDeadline)}
                           </Typography>
-                          <Chip size="small" color={deadlineChipColor(item.deadlines?.pioDeadlineStatus)} label={chipData.label} />
+                          <Chip
+                            size="small"
+                            color={deadlineChipColor(stageDeadlineStatus)}
+                            label={chipData.label}
+                          />
                         </Stack>
                       </TableCell>
                       <TableCell>

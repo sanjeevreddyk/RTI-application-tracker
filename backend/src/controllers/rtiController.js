@@ -8,6 +8,55 @@ const asyncHandler = require('../utils/asyncHandler');
 const { computeDeadlines, getDeadlineStatus, getReminderRule } = require('../utils/deadline');
 const { destroyByPublicId } = require('../config/cloudinary');
 
+const FIRST_APPEAL_STATUSES = new Set(['First Appeal Filed', 'First Appeal Order Received']);
+const SECOND_APPEAL_STATUSES = new Set([
+  'Second Appeal Filed',
+  'Second Appeal Hearing',
+  'Second Appeal Order'
+]);
+
+function getCurrentStageDeadline(status, deadlines, isClosed) {
+  if (isClosed) {
+    return {
+      currentStageDeadline: null,
+      currentStageDeadlineStatus: 'na'
+    };
+  }
+
+  if (FIRST_APPEAL_STATUSES.has(status)) {
+    return {
+      currentStageDeadline: deadlines.firstAppealDeadline,
+      currentStageDeadlineStatus: getDeadlineStatus(deadlines.firstAppealDeadline)
+    };
+  }
+
+  if (SECOND_APPEAL_STATUSES.has(status)) {
+    return {
+      currentStageDeadline: deadlines.secondAppealEligibleOn,
+      currentStageDeadlineStatus: getDeadlineStatus(deadlines.secondAppealEligibleOn)
+    };
+  }
+
+  return {
+    currentStageDeadline: deadlines.pioDeadline,
+    currentStageDeadlineStatus: getDeadlineStatus(deadlines.pioDeadline)
+  };
+}
+
+function addDays(value, days) {
+  if (!value) {
+    return null;
+  }
+
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) {
+    return null;
+  }
+
+  date.setDate(date.getDate() + days);
+  return date;
+}
+
 const buildFilters = (query) => {
   const filters = {};
 
@@ -68,6 +117,16 @@ const enrichRti = async (rtiDoc) => {
   const secondAppealDeadlineStatus = isClosed
     ? 'na'
     : getDeadlineStatus(deadlines.secondAppealEligibleOn);
+  let {
+    currentStageDeadline,
+    currentStageDeadlineStatus
+  } = getCurrentStageDeadline(effectiveStatus, deadlines, isClosed);
+  if (!isClosed && !currentStageDeadline) {
+    // Backward-compatible fallback for older data where applicationDate may be missing.
+    const fallbackAnchor = latestStage?.stageDate || rtiDoc.applicationDate;
+    currentStageDeadline = addDays(fallbackAnchor, 40);
+    currentStageDeadlineStatus = getDeadlineStatus(currentStageDeadline);
+  }
   const pioReminderRule = isClosed ? null : getReminderRule(deadlines.pioDeadline);
   const secondAppealReminderRule = isClosed ? null : getReminderRule(deadlines.secondAppealEligibleOn);
 
@@ -83,6 +142,8 @@ const enrichRti = async (rtiDoc) => {
       firstAppealDeadlineStatus,
       secondAppealEligibleOn: deadlines.secondAppealEligibleOn,
       secondAppealDeadlineStatus,
+      currentStageDeadline,
+      currentStageDeadlineStatus,
       secondAppealReminderRule
     }
   };
