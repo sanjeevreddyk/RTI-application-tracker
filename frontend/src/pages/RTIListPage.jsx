@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
-import { Link, useLocation } from 'react-router-dom';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { useDispatch, useSelector } from 'react-redux';
 import {
   Button,
@@ -104,6 +104,7 @@ export default function RTIListPage() {
   const isMobile = useMediaQuery(theme.breakpoints.down('md'));
   const dispatch = useDispatch();
   const location = useLocation();
+  const navigate = useNavigate();
   const { list, loading } = useSelector((state) => state.rti);
   const initialParams = useMemo(() => new URLSearchParams(location.search), []);
 
@@ -266,6 +267,15 @@ export default function RTIListPage() {
             return (
               <Paper
                 key={item._id}
+                role="button"
+                tabIndex={0}
+                onClick={() => navigate(`/rtis/${item._id}`)}
+                onKeyDown={(event) => {
+                  if (event.key === 'Enter' || event.key === ' ') {
+                    event.preventDefault();
+                    navigate(`/rtis/${item._id}`);
+                  }
+                }}
                 sx={{ p: 1.5, ...deadlineRowSx(stageDeadlineStatus) }}
               >
                 <Stack spacing={0.75}>
@@ -291,9 +301,12 @@ export default function RTIListPage() {
                     />
                   </Stack>
                   <Stack direction="row" spacing={1} flexWrap="wrap">
-                    <Button size="small" component={Link} to={`/rtis/${item._id}`}>View</Button>
-                    <Button size="small" component={Link} to={`/rtis/${item._id}/edit`}>Edit</Button>
-                    <Button size="small" color="error" onClick={() => openDeleteConfirm(item)}>
+                    <Button size="small" component={Link} to={`/rtis/${item._id}`} onClick={(event) => event.stopPropagation()}>View</Button>
+                    <Button size="small" component={Link} to={`/rtis/${item._id}/edit`} onClick={(event) => event.stopPropagation()}>Edit</Button>
+                    <Button size="small" color="error" onClick={(event) => {
+                      event.stopPropagation();
+                      openDeleteConfirm(item);
+                    }}>
                       Delete
                     </Button>
                   </Stack>
