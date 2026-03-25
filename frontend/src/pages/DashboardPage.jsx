@@ -170,8 +170,33 @@ export default function DashboardPage() {
         <Typography variant="subtitle1" fontWeight={700} mb={1}>
           Upcoming Deadlines
         </Typography>
-        <TableContainer sx={{ overflowX: 'auto' }}>
-          <Table size="small">
+        <Stack spacing={1} sx={{ display: { xs: 'flex', md: 'none' } }}>
+          {sortedUpcomingDeadlines.length === 0 ? (
+            <Typography variant="body2" color="text.secondary">
+              No upcoming deadlines found.
+            </Typography>
+          ) : (
+            sortedUpcomingDeadlines.map((item) => (
+              <Paper key={`${item.rtiId}-${item.deadlineType}`} variant="outlined" sx={{ p: 1.25 }}>
+                <Typography variant="body2" fontWeight={700}>
+                  {formatRtiNumber(item.rtiNumber, item.applicationDate)}
+                </Typography>
+                <Typography variant="body2" color="text.secondary">
+                  Department: {item.department || '-'}
+                </Typography>
+                <Typography variant="body2">Filed: {formatDate(item.applicationDate)}</Typography>
+                <Typography variant="body2">Deadline: {formatDate(item.deadlineDate)}</Typography>
+                <Typography variant="body2">Status: {item.status || '-'}</Typography>
+                <Typography variant="body2" color="text.secondary">
+                  Rule: {item.reminderRule || '-'}
+                </Typography>
+              </Paper>
+            ))
+          )}
+        </Stack>
+
+        <TableContainer sx={{ display: { xs: 'none', md: 'block' }, overflowX: 'auto', width: '100%', WebkitOverflowScrolling: 'touch' }}>
+          <Table size="small" sx={{ minWidth: 760 }}>
             <TableHead>
               <TableRow>
                 <TableCell sortDirection={sortBy === 'rtiNumber' ? sortDir : false}>
@@ -223,16 +248,26 @@ export default function DashboardPage() {
               </TableRow>
             </TableHead>
             <TableBody>
-              {sortedUpcomingDeadlines.map((item) => (
-                <TableRow key={`${item.rtiId}-${item.deadlineType}`}>
-                  <TableCell>{formatRtiNumber(item.rtiNumber, item.applicationDate)}</TableCell>
-                  <TableCell>{item.department}</TableCell>
-                  <TableCell>{formatDate(item.applicationDate)}</TableCell>
-                  <TableCell>{formatDate(item.deadlineDate)}</TableCell>
-                  <TableCell>{item.status}</TableCell>
-                  <TableCell>{item.reminderRule || '-'}</TableCell>
+              {sortedUpcomingDeadlines.length === 0 ? (
+                <TableRow>
+                  <TableCell colSpan={6}>
+                    <Typography variant="body2" color="text.secondary">
+                      No upcoming deadlines found.
+                    </Typography>
+                  </TableCell>
                 </TableRow>
-              ))}
+              ) : (
+                sortedUpcomingDeadlines.map((item) => (
+                  <TableRow key={`${item.rtiId}-${item.deadlineType}`}>
+                    <TableCell>{formatRtiNumber(item.rtiNumber, item.applicationDate)}</TableCell>
+                    <TableCell>{item.department}</TableCell>
+                    <TableCell>{formatDate(item.applicationDate)}</TableCell>
+                    <TableCell>{formatDate(item.deadlineDate)}</TableCell>
+                    <TableCell>{item.status}</TableCell>
+                    <TableCell>{item.reminderRule || '-'}</TableCell>
+                  </TableRow>
+                ))
+              )}
             </TableBody>
           </Table>
         </TableContainer>

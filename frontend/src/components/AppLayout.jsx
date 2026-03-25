@@ -5,7 +5,6 @@ import {
   Avatar,
   AppBar,
   Box,
-  Button,
   Drawer,
   IconButton,
   InputBase,
@@ -73,7 +72,7 @@ export default function AppLayout({ children }) {
   }
 
   const drawerContent = (
-    <>
+    <Box sx={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
       <Toolbar sx={{ justifyContent: desktopCollapsed ? 'center' : 'space-between' }}>
         {!desktopCollapsed && (
           <Typography variant="h6" fontWeight={800} color="#2f3d4a">
@@ -124,7 +123,39 @@ export default function AppLayout({ children }) {
           </Tooltip>
         ))}
       </List>
-    </>
+      <Box sx={{ flexGrow: 1 }} />
+      <List sx={{ pb: 1 }}>
+        <Tooltip title={desktopCollapsed ? 'Logout' : ''} placement="right">
+          <ListItemButton
+            onClick={() => {
+              dispatch(logout());
+              showInfoToast('Logged out successfully');
+              navigate('/login');
+              if (isMobile) {
+                setMobileOpen(false);
+              }
+            }}
+            sx={{
+              mx: 1,
+              borderRadius: 2,
+              minHeight: 42,
+              justifyContent: desktopCollapsed ? 'center' : 'initial',
+              px: desktopCollapsed ? 1.5 : 2
+            }}
+          >
+            <ListItemIcon
+              sx={{
+                minWidth: desktopCollapsed ? 0 : 36,
+                justifyContent: 'center'
+              }}
+            >
+              <LogoutIcon />
+            </ListItemIcon>
+            {!desktopCollapsed && <ListItemText primary="Logout" />}
+          </ListItemButton>
+        </Tooltip>
+      </List>
+    </Box>
   );
 
   return (
@@ -224,17 +255,6 @@ export default function AppLayout({ children }) {
               <Typography variant="body2" color="text.secondary" sx={{ display: { xs: 'none', md: 'block' } }}>
                 {user?.name || user?.email}
               </Typography>
-              <Button
-                size="small"
-                startIcon={isMobile ? null : <LogoutIcon />}
-                onClick={() => {
-                  dispatch(logout());
-                  showInfoToast('Logged out successfully');
-                  navigate('/login');
-                }}
-              >
-                {isMobile ? <LogoutIcon fontSize="small" /> : 'Logout'}
-              </Button>
             </Box>
           </Toolbar>
         </AppBar>

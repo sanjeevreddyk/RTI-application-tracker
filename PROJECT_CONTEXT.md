@@ -100,6 +100,8 @@ Add short entries like:
 - What was just completed:
 - Created and prefilled `PROJECT_CONTEXT.md` from current repository state.
 - Recent shipped updates (latest commits):
+  - Dashboard upcoming deadlines now render as mobile cards on `xs/sm` and sortable table on `md+`; fixed mobile visibility regression.
+  - Logout action moved from top app bar to left navigation drawer for consistent desktop/mobile UX.
   - Responsive/mobile compatibility improvements across layout, dashboard/analytics charts, timeline, calendar, and RTI details docs.
   - PIO and appellate authority address capture added.
   - Appeal authority split into first/second stage fields.
