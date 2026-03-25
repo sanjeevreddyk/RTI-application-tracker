@@ -28,8 +28,10 @@ export default function Timeline({ stages, onEditStage }) {
             key={stage}
             sx={{
               display: 'flex',
-              alignItems: 'center',
+              alignItems: { xs: 'flex-start', sm: 'center' },
               justifyContent: 'space-between',
+              flexDirection: { xs: 'column', sm: 'row' },
+              gap: 1,
               p: 1.5,
               border: '1px solid',
               borderColor: completed ? 'success.light' : 'grey.300',
@@ -42,7 +44,7 @@ export default function Timeline({ stages, onEditStage }) {
                 {stage}
               </Typography>
             </Stack>
-            <Stack spacing={0.5} alignItems="flex-end">
+            <Stack spacing={0.5} alignItems={{ xs: 'flex-start', sm: 'flex-end' }}>
               <Chip label={stageRecord ? formatDate(stageRecord.stageDate) : 'Pending'} size="small" />
               {stageRecord?.postalTrackingNumber && (
                 <Typography variant="caption" color="text.secondary">

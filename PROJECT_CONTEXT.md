@@ -6,7 +6,7 @@ Use this file to give any new Codex session enough context to continue work with
 - Project name: RTI Case Management System
 - One-line purpose: Full-stack tracker for RTI applications, stages, documents, notes, deadlines, analytics, and exports.
 - Current status: `active dev`
-- Last updated on (YYYY-MM-DD): 2026-03-11
+- Last updated on (YYYY-MM-DD): 2026-03-25
 - Owner(s): `TODO`
 
 ## 2) Architecture At A Glance
@@ -68,6 +68,7 @@ Use this file to give any new Codex session enough context to continue work with
   - Feature implemented and manually verified via UI + API
   - No regression in auth, RTI CRUD, stage/docs, notes, dashboard, analytics, exports
   - README/PROJECT_CONTEXT updated if behavior/setup changes
+  - PROJECT_CONTEXT updated on every commit with what changed + any new risks/follow-ups
 
 ## 7) Decisions Log (Why)
 Add short entries like:
@@ -99,6 +100,7 @@ Add short entries like:
 - What was just completed:
 - Created and prefilled `PROJECT_CONTEXT.md` from current repository state.
 - Recent shipped updates (latest commits):
+  - Responsive/mobile compatibility improvements across layout, dashboard/analytics charts, timeline, calendar, and RTI details docs.
   - PIO and appellate authority address capture added.
   - Appeal authority split into first/second stage fields.
   - RTI list deadline/status visualization improved with color coding and style refinements.
@@ -113,6 +115,13 @@ Add short entries like:
 - Cloudinary/Atlas/Render env drift can break runtime after deploy.
 - Assistant response preference:
 - Always use compact mode by default (minimal tokens, concise replies, minimal progress chatter unless explicitly requested).
+
+## 11) Commit Update Rule
+- For every commit, update `PROJECT_CONTEXT.md` in the same commit.
+- Minimum required update:
+  - Set `Last updated on` to commit date.
+  - Add/adjust bullet(s) under `Recent shipped updates`.
+  - Add any new risk/workaround under `Known Issues / Tech Debt` if introduced.
 - Suggested first prompt to paste:
 
 ```text

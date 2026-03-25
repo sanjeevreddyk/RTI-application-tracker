@@ -275,7 +275,7 @@ export default function RTIListPage() {
                   <Typography variant="body2">{item.subject}</Typography>
                   <Typography variant="caption" color="text.secondary">{item.department}</Typography>
                   <Typography variant="caption">Filed: {formatDate(item.applicationDate)}</Typography>
-                  <Stack direction="row" spacing={1} alignItems="center">
+                  <Stack direction="row" spacing={1} alignItems="center" flexWrap="wrap">
                     <Typography variant="caption">Status:</Typography>
                     <Chip size="small" variant="outlined" color={statusChipColor(item.status)} label={item.status} />
                   </Stack>

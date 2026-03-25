@@ -23,14 +23,14 @@ export default function CalendarPage() {
             key={`${item.rtiId}-${item.deadlineType}`}
             sx={{ p: 2, background: 'linear-gradient(145deg, #ffffff 0%, #f7fbff 100%)' }}
           >
-            <Stack direction="row" justifyContent="space-between" alignItems="center">
-              <div>
+            <Stack direction={{ xs: 'column', sm: 'row' }} justifyContent="space-between" alignItems={{ xs: 'flex-start', sm: 'center' }} spacing={1}>
+              <Stack spacing={0.25}>
                 <Typography fontWeight={600}>
                   {formatRtiNumber(item.rtiNumber, item.applicationDate)}
                 </Typography>
                 <Typography variant="body2" color="text.secondary">{item.department} | {item.deadlineType}</Typography>
                 <Typography variant="body2">Due: {formatDate(item.deadlineDate)}</Typography>
-              </div>
+              </Stack>
               <Chip label={chip.label} color={chip.color} />
             </Stack>
           </Paper>

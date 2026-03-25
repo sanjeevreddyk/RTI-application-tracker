@@ -246,7 +246,7 @@ export default function RTIForm({
           )}
         </Grid2>
 
-        <Stack direction="row" justifyContent="flex-end" spacing={1} mt={2}>
+        <Stack direction={{ xs: 'column', sm: 'row' }} justifyContent="flex-end" spacing={1} mt={2}>
           {!!secondaryActionLabel && (
             <Button type="button" variant="outlined" onClick={onSecondaryAction}>
               {secondaryActionLabel}

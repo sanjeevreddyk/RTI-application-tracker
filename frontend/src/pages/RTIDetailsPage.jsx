@@ -27,7 +27,9 @@ import {
   TableHead,
   TableRow,
   TextField,
-  Typography
+  Typography,
+  useMediaQuery,
+  useTheme
 } from '@mui/material';
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import Timeline from '../components/Timeline';
@@ -122,6 +124,8 @@ function DetailRow({ label, value }) {
 export default function RTIDetailsPage() {
   const { id } = useParams();
   const dispatch = useDispatch();
+  const theme = useTheme();
+  const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
   const { selected, stages, documents, notes } = useSelector((state) => state.rti);
 
   const [stageForm, setStageForm] = useState({
@@ -486,7 +490,13 @@ export default function RTIDetailsPage() {
           <Typography variant="h6">
             {formatRtiNumber(selected.rtiNumber, selected.applicationDate)} - {selected.subject}
           </Typography>
-          <Typography variant="body2" color="text.secondary">Department: {selected.department}</Typography>
+          <Typography
+            variant="body2"
+            color="text.secondary"
+            sx={{ wordBreak: 'break-word' }}
+          >
+            Department: {selected.department}
+          </Typography>
           <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1} mt={1} flexWrap="wrap">
             <Chip label={`Status: ${latestStageName || selected.status}`} />
             {!isCaseClosed && (
@@ -743,44 +753,76 @@ export default function RTIDetailsPage() {
                       </Typography>
                     </AccordionSummary>
                     <AccordionDetails>
-                      <TableContainer sx={{ overflowX: 'auto' }}>
-                        <Table size="small">
-                        <TableHead>
-                          <TableRow>
-                            <TableCell>File</TableCell>
-                            <TableCell>Type</TableCell>
-                            <TableCell>Stage</TableCell>
-                            <TableCell>Stage Date</TableCell>
-                            <TableCell>Postal Tracking Number</TableCell>
-                            <TableCell>Actions</TableCell>
-                          </TableRow>
-                        </TableHead>
-                        <TableBody>
+                      {isMobile ? (
+                        <Stack spacing={1}>
                           {documentsByStage[stage].map((doc) => (
-                            <TableRow key={doc._id}>
-                              <TableCell>{doc.fileName}</TableCell>
-                              <TableCell>{doc.fileType}</TableCell>
-                              <TableCell>{doc.stageName || 'General'}</TableCell>
-                              <TableCell>{formatDate(resolveDocumentStageDate(doc))}</TableCell>
-                              <TableCell>{resolveDocumentStageTracking(doc) || '-'}</TableCell>
-                              <TableCell>
-                                <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1}>
-                                  <Link href={resolveDocumentUrl(doc.filePath)} target="_blank" rel="noreferrer">
-                                    Preview
-                                  </Link>
-                                  <Link href={resolveDocumentUrl(doc.filePath)} download>
-                                    Download
-                                  </Link>
-                                  <Button color="error" size="small" onClick={() => dispatch(removeDocument(doc._id))}>
-                                    Delete
-                                  </Button>
-                                </Stack>
-                              </TableCell>
-                            </TableRow>
+                            <Paper key={doc._id} variant="outlined" sx={{ p: 1 }}>
+                              <Typography variant="body2" fontWeight={600} sx={{ wordBreak: 'break-word' }}>
+                                {doc.fileName}
+                              </Typography>
+                              <Typography variant="caption" color="text.secondary">
+                                {doc.fileType} | {doc.stageName || 'General'}
+                              </Typography>
+                              <Typography variant="caption" display="block">
+                                Stage Date: {formatDate(resolveDocumentStageDate(doc))}
+                              </Typography>
+                              <Typography variant="caption" display="block" sx={{ wordBreak: 'break-word' }}>
+                                Tracking: {resolveDocumentStageTracking(doc) || '-'}
+                              </Typography>
+                              <Stack direction="row" spacing={1} mt={0.75} flexWrap="wrap">
+                                <Link href={resolveDocumentUrl(doc.filePath)} target="_blank" rel="noreferrer">
+                                  Preview
+                                </Link>
+                                <Link href={resolveDocumentUrl(doc.filePath)} download>
+                                  Download
+                                </Link>
+                                <Button color="error" size="small" onClick={() => dispatch(removeDocument(doc._id))}>
+                                  Delete
+                                </Button>
+                              </Stack>
+                            </Paper>
                           ))}
-                        </TableBody>
-                        </Table>
-                      </TableContainer>
+                        </Stack>
+                      ) : (
+                        <TableContainer sx={{ overflowX: 'auto' }}>
+                          <Table size="small">
+                            <TableHead>
+                              <TableRow>
+                                <TableCell>File</TableCell>
+                                <TableCell>Type</TableCell>
+                                <TableCell>Stage</TableCell>
+                                <TableCell>Stage Date</TableCell>
+                                <TableCell>Postal Tracking Number</TableCell>
+                                <TableCell>Actions</TableCell>
+                              </TableRow>
+                            </TableHead>
+                            <TableBody>
+                              {documentsByStage[stage].map((doc) => (
+                                <TableRow key={doc._id}>
+                                  <TableCell>{doc.fileName}</TableCell>
+                                  <TableCell>{doc.fileType}</TableCell>
+                                  <TableCell>{doc.stageName || 'General'}</TableCell>
+                                  <TableCell>{formatDate(resolveDocumentStageDate(doc))}</TableCell>
+                                  <TableCell>{resolveDocumentStageTracking(doc) || '-'}</TableCell>
+                                  <TableCell>
+                                    <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1}>
+                                      <Link href={resolveDocumentUrl(doc.filePath)} target="_blank" rel="noreferrer">
+                                        Preview
+                                      </Link>
+                                      <Link href={resolveDocumentUrl(doc.filePath)} download>
+                                        Download
+                                      </Link>
+                                      <Button color="error" size="small" onClick={() => dispatch(removeDocument(doc._id))}>
+                                        Delete
+                                      </Button>
+                                    </Stack>
+                                  </TableCell>
+                                </TableRow>
+                              ))}
+                            </TableBody>
+                          </Table>
+                        </TableContainer>
+                      )}
                     </AccordionDetails>
                   </Accordion>
                 ))}

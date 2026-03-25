@@ -165,7 +165,7 @@ export default function AppLayout({ children }) {
         </Drawer>
       )}
 
-      <Box component="main" sx={{ flexGrow: 1 }}>
+      <Box component="main" sx={{ flexGrow: 1, minWidth: 0 }}>
         <AppBar
           position="static"
           color="inherit"
@@ -175,15 +175,15 @@ export default function AppLayout({ children }) {
             bgcolor: '#eef1f6'
           }}
         >
-          <Toolbar sx={{ gap: 1.5, justifyContent: 'space-between', flexWrap: { xs: 'wrap', sm: 'nowrap' } }}>
-            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5, flex: 1, minWidth: 0 }}>
+          <Toolbar sx={{ gap: { xs: 1, sm: 1.5 }, justifyContent: 'space-between', flexWrap: { xs: 'wrap', sm: 'nowrap' }, px: { xs: 1, sm: 2 } }}>
+            <Box sx={{ display: 'flex', alignItems: 'center', gap: { xs: 0.75, sm: 1.5 }, flex: 1, minWidth: 0, width: { xs: '100%', sm: 'auto' } }}>
               {isMobile && (
                 <IconButton onClick={() => setMobileOpen(true)} edge="start">
                   <MenuIcon />
                 </IconButton>
               )}
               {isMobile && (
-                <Typography variant="subtitle1" fontWeight={700} sx={{ mr: 0.5 }}>
+                <Typography variant="subtitle1" fontWeight={700} sx={{ mr: 0.25, display: { xs: 'none', sm: 'block' } }}>
                   RTI CMS
                 </Typography>
               )}
@@ -198,15 +198,17 @@ export default function AppLayout({ children }) {
                   border: '1px solid #d5dce6',
                   backgroundColor: '#fff',
                   borderRadius: 2,
-                  width: '100%',
-                  maxWidth: { xs: '100%', sm: 480 }
+                  flex: 1,
+                  width: 'auto',
+                  maxWidth: { xs: 'none', sm: 480 },
+                  minWidth: 0
                 }}
               />
               <IconButton onClick={() => navigate(`/rtis?search=${encodeURIComponent(search)}`)}>
                 <SearchIcon />
               </IconButton>
             </Box>
-            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, ml: 1 }}>
+            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, ml: { xs: 0, sm: 1 }, width: { xs: '100%', sm: 'auto' }, justifyContent: { xs: 'space-between', sm: 'flex-start' } }}>
               <Avatar
                 sx={{
                   width: 32,
@@ -224,14 +226,14 @@ export default function AppLayout({ children }) {
               </Typography>
               <Button
                 size="small"
-                startIcon={<LogoutIcon />}
+                startIcon={isMobile ? null : <LogoutIcon />}
                 onClick={() => {
                   dispatch(logout());
                   showInfoToast('Logged out successfully');
                   navigate('/login');
                 }}
               >
-                Logout
+                {isMobile ? <LogoutIcon fontSize="small" /> : 'Logout'}
               </Button>
             </Box>
           </Toolbar>

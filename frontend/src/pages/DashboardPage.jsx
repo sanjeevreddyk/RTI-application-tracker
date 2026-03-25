@@ -15,7 +15,9 @@ import {
   TableHead,
   TableRow,
   TableSortLabel,
-  Typography
+  Typography,
+  useMediaQuery,
+  useTheme
 } from '@mui/material';
 import {
   Bar,
@@ -38,6 +40,8 @@ const COLORS = ['#0f5cc0', '#2f855a', '#b7791f', '#c53030'];
 export default function DashboardPage() {
   const navigate = useNavigate();
   const dispatch = useDispatch();
+  const theme = useTheme();
+  const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
   const { data } = useSelector((state) => state.dashboard);
   const [sortBy, setSortBy] = useState('applicationDate');
   const [sortDir, setSortDir] = useState('asc');
@@ -119,7 +123,7 @@ export default function DashboardPage() {
                   <Typography color={index === 2 ? 'rgba(255,255,255,0.9)' : 'text.secondary'}>
                     {item.label}
                   </Typography>
-                  <Typography variant="h4" color={index === 2 ? '#fff' : 'primary.main'} fontWeight={800}>
+                  <Typography variant={isMobile ? 'h5' : 'h4'} color={index === 2 ? '#fff' : 'primary.main'} fontWeight={800}>
                     {item.value}
                   </Typography>
                 </CardContent>
@@ -134,8 +138,8 @@ export default function DashboardPage() {
           <Paper sx={{ p: 2, height: 340, background: 'linear-gradient(180deg, #ffffff 0%, #f8fbfe 100%)' }}>
             <Typography variant="subtitle1" fontWeight={700} mb={1}>RTIs Filed Per Year</Typography>
             <ResponsiveContainer width="100%" height="90%">
-              <BarChart data={data?.charts?.filedPerYear || []}>
-                <XAxis dataKey="year" />
+              <BarChart data={data?.charts?.filedPerYear || []} margin={{ left: isMobile ? -18 : 0, right: isMobile ? 8 : 0 }}>
+                <XAxis dataKey="year" tick={{ fontSize: isMobile ? 11 : 12 }} />
                 <YAxis />
                 <Tooltip />
                 <Legend />
@@ -149,7 +153,7 @@ export default function DashboardPage() {
             <Typography variant="subtitle1" fontWeight={700} mb={1}>Success vs Pending</Typography>
             <ResponsiveContainer width="100%" height="90%">
               <PieChart>
-                <Pie data={data?.charts?.successVsPending || []} dataKey="value" nameKey="name" outerRadius={100}>
+                <Pie data={data?.charts?.successVsPending || []} dataKey="value" nameKey="name" outerRadius={isMobile ? 74 : 100}>
                   {(data?.charts?.successVsPending || []).map((_, idx) => (
                     <Cell key={idx} fill={COLORS[idx % COLORS.length]} />
                   ))}
