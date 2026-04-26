@@ -4,9 +4,9 @@ Use this file to give any new Codex session enough context to continue work with
 
 ## 1) Project Snapshot
 - Project name: RTI Case Management System
-- One-line purpose: Full-stack tracker for RTI applications, stages, documents, notes, deadlines, analytics, and exports.
+- One-line purpose: Authenticated full-stack tracker for RTI applications, lifecycle stages, documents, notes, deadlines, analytics, calendar views, exports, and draft generation.
 - Current status: `active dev`
-- Last updated on (YYYY-MM-DD): 2026-03-25
+- Last updated on (YYYY-MM-DD): 2026-04-26
 - Owner(s): `TODO`
 
 ## 2) Architecture At A Glance
@@ -16,6 +16,7 @@ Use this file to give any new Codex session enough context to continue work with
 - Auth: JWT (`/api/auth/register`, `/api/auth/login`, `/api/auth/me`)
 - Deployment target: Render (frontend static site + backend web service)
 - Key external services: MongoDB Atlas, Cloudinary, Render
+- Runtime routes: unauthenticated users are redirected to `/login`; authenticated users can access `/dashboard`, `/rtis`, `/rtis/add`, `/rtis/:id`, `/rtis/:id/edit`, `/analytics`, and `/calendar`
 
 ## 3) Local Setup
 - Prerequisites: Node.js 18+ (20/22 recommended), npm, MongoDB Atlas or local MongoDB, Cloudinary account
@@ -41,13 +42,14 @@ Use this file to give any new Codex session enough context to continue work with
   - Create/list/view/edit/delete RTI applications
   - Manage stage timeline and upload supporting documents
   - Add/view case notes
-  - Monitor dashboard metrics, deadlines, and analytics
+  - Monitor dashboard metrics, deadlines, analytics, and calendar views
   - Export data (CSV/PDF) and generate drafts
 - Must-have features:
   - JWT-protected APIs
   - Deadline and overdue logic
   - Stage-wise document handling
   - Dashboard + analytics views
+  - RTI lifecycle fields for PIO details, filing/postal information, first appeal authority, and second appeal authority
 - Nice-to-have features:
   - Richer reporting/custom filters
   - Stronger validation and audit logs
@@ -98,8 +100,10 @@ Add short entries like:
 
 ## 10) Handoff For Next Codex Session
 - What was just completed:
-- Created and prefilled `PROJECT_CONTEXT.md` from current repository state.
+- Added document upload date and stage description visibility in the RTI details document tables; new stage uploads now snapshot the stage description on each document.
 - Recent shipped updates (latest commits):
+  - Stage document lists now show Upload Date and Description columns/cards; document uploads persist the stage description submitted with the stage form.
+  - Documentation now calls out the authenticated route map, RTI lifecycle scope, stage-wise postal/appellate authority fields, calendar view, and document repository behavior.
   - RTI list mobile cards are now fully clickable to open details (same behavior as `View`), while `Edit`/`Delete` remain independent actions.
   - Dashboard upcoming deadlines now render as mobile cards on `xs/sm` and sortable table on `md+`; fixed mobile visibility regression.
   - Logout action moved from top app bar to left navigation drawer for consistent desktop/mobile UX.

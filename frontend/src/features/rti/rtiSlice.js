@@ -73,6 +73,10 @@ export const uploadDocuments = createAsyncThunk('rti/uploadDocuments', async (pa
     formData.append('stageId', payload.stageId);
   }
 
+  if (payload.stageDescription) {
+    formData.append('stageDescription', payload.stageDescription);
+  }
+
   payload.files.forEach((file) => formData.append('files', file));
 
   const { data } = await apiClient.post('/document/upload', formData, {

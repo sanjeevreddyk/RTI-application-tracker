@@ -61,7 +61,7 @@ function buildPublicId(fileName, mimeType, resourceType) {
 }
 
 const uploadDocuments = asyncHandler(async (req, res) => {
-  const { rtiId, stageId, stageName } = req.body;
+  const { rtiId, stageId, stageName, stageDescription } = req.body;
 
   if (!rtiId) {
     res.status(400);
@@ -98,6 +98,7 @@ const uploadDocuments = asyncHandler(async (req, res) => {
     rtiId,
     stageId: stageId || null,
     stageName: normalizedStageName,
+    stageDescription: stageDescription || '',
     fileName: withExtension(req.files[index].originalname, req.files[index].mimetype),
     filePath: result.secure_url,
     fileType: req.files[index].mimetype,

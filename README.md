@@ -2,6 +2,12 @@
 
 Full-stack RTI lifecycle tracker built with React, Node.js, Express, MongoDB, and Cloudinary.
 
+## Application Overview
+
+This application helps track Right to Information (RTI) cases from initial filing through PIO response, first appeal, second appeal, hearing/order stages, and final closure. It combines case records, timeline stages, document uploads, case notes, deadlines, analytics, calendar views, and exports in one authenticated workspace.
+
+The frontend is a Vite React app with protected routes for dashboard, RTI list, add/edit/detail views, analytics, and calendar. The backend is an Express API secured with JWT middleware after authentication routes, with MongoDB storing case data and Cloudinary handling uploaded file binaries.
+
 ## Tech Stack
 
 - Frontend: React, Vite, Redux Toolkit, React Router, Axios, Material UI, Recharts
@@ -14,12 +20,16 @@ Full-stack RTI lifecycle tracker built with React, Node.js, Express, MongoDB, an
 
 - `frontend/` - React app (Vite)
 - `backend/` - Express API
+- `PROJECT_CONTEXT.md` - durable handoff notes for future development sessions
 
 ## Core Features
 
 - RTI dashboard with counts, charts, and deadline highlights
-- RTI application create/edit/list/detail flow
-- Timeline stages with stage-wise document uploads
+- RTI application create/edit/list/detail/delete flow
+- RTI form fields for applicant, department, PIO, filing mode, fee, postal tracking, status, and remarks
+- Timeline stages for RTI filed, PIO response, first appeal, second appeal, hearing/order, and case closure
+- Stage-wise postal tracking and first/second appellate authority details
+- Stage-wise document uploads plus document repository fallback for closed cases
 - Notes/case diary per RTI case
 - Deadline calculation and overdue logic
 - CSV/PDF exports and draft generator

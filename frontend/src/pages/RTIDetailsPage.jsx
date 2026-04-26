@@ -217,6 +217,24 @@ export default function RTIDetailsPage() {
     });
     return map;
   }, [stages]);
+  const stageDescriptionById = useMemo(() => {
+    const map = new Map();
+    stages.forEach((stage) => {
+      if (stage?._id) {
+        map.set(String(stage._id), stage.description || '');
+      }
+    });
+    return map;
+  }, [stages]);
+  const stageDescriptionByName = useMemo(() => {
+    const map = new Map();
+    stages.forEach((stage) => {
+      if (stage?.stageName) {
+        map.set(stage.stageName, stage.description || '');
+      }
+    });
+    return map;
+  }, [stages]);
   const showStagePostalTracking = trackingStages.has(stageForm.stageName);
   const showCloseCaseSatisfied = stageForm.stageName === 'PIO Response Received';
   const showFirstAppealAuthority = stageForm.stageName === firstAppealStage;
@@ -356,6 +374,27 @@ export default function RTIDetailsPage() {
 
     return '';
   };
+  const resolveDocumentStageDescription = (doc) => {
+    if (doc?.stageDescription) {
+      return doc.stageDescription;
+    }
+
+    if (doc?.stageId && stageDescriptionById.has(String(doc.stageId))) {
+      const value = stageDescriptionById.get(String(doc.stageId));
+      if (value) {
+        return value;
+      }
+    }
+
+    if (doc?.stageName && stageDescriptionByName.has(doc.stageName)) {
+      const value = stageDescriptionByName.get(doc.stageName);
+      if (value) {
+        return value;
+      }
+    }
+
+    return '';
+  };
 
   async function submitStage(event) {
     event.preventDefault();
@@ -405,6 +444,7 @@ export default function RTIDetailsPage() {
             rtiId: id,
             stageId: createdStage._id,
             stageName: stageForm.stageName,
+            stageDescription: stageForm.description,
             files: stageFiles
           })
         ).unwrap();
@@ -766,6 +806,12 @@ export default function RTIDetailsPage() {
                               <Typography variant="caption" display="block">
                                 Stage Date: {formatDate(resolveDocumentStageDate(doc))}
                               </Typography>
+                              <Typography variant="caption" display="block">
+                                Upload Date: {formatDate(doc.uploadDate || doc.createdAt)}
+                              </Typography>
+                              <Typography variant="caption" display="block" sx={{ wordBreak: 'break-word' }}>
+                                Description: {resolveDocumentStageDescription(doc) || '-'}
+                              </Typography>
                               <Typography variant="caption" display="block" sx={{ wordBreak: 'break-word' }}>
                                 Tracking: {resolveDocumentStageTracking(doc) || '-'}
                               </Typography>
@@ -792,6 +838,8 @@ export default function RTIDetailsPage() {
                                 <TableCell>Type</TableCell>
                                 <TableCell>Stage</TableCell>
                                 <TableCell>Stage Date</TableCell>
+                                <TableCell>Upload Date</TableCell>
+                                <TableCell>Description</TableCell>
                                 <TableCell>Postal Tracking Number</TableCell>
                                 <TableCell>Actions</TableCell>
                               </TableRow>
@@ -803,6 +851,10 @@ export default function RTIDetailsPage() {
                                   <TableCell>{doc.fileType}</TableCell>
                                   <TableCell>{doc.stageName || 'General'}</TableCell>
                                   <TableCell>{formatDate(resolveDocumentStageDate(doc))}</TableCell>
+                                  <TableCell>{formatDate(doc.uploadDate || doc.createdAt)}</TableCell>
+                                  <TableCell sx={{ maxWidth: 260, whiteSpace: 'normal', wordBreak: 'break-word' }}>
+                                    {resolveDocumentStageDescription(doc) || '-'}
+                                  </TableCell>
                                   <TableCell>{resolveDocumentStageTracking(doc) || '-'}</TableCell>
                                   <TableCell>
                                     <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1}>
