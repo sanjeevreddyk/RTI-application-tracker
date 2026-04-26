@@ -804,16 +804,28 @@ export default function RTIDetailsPage() {
                                 {doc.fileType} | {doc.stageName || 'General'}
                               </Typography>
                               <Typography variant="caption" display="block">
-                                Stage Date: {formatDate(resolveDocumentStageDate(doc))}
+                                <Box component="span" sx={{ fontWeight: 700 }}>
+                                  Stage Date:
+                                </Box>{' '}
+                                {formatDate(resolveDocumentStageDate(doc))}
                               </Typography>
                               <Typography variant="caption" display="block">
-                                Upload Date: {formatDate(doc.uploadDate || doc.createdAt)}
+                                <Box component="span" sx={{ fontWeight: 700 }}>
+                                  Upload Date:
+                                </Box>{' '}
+                                {formatDate(doc.uploadDate || doc.createdAt)}
                               </Typography>
                               <Typography variant="caption" display="block" sx={{ wordBreak: 'break-word' }}>
-                                Description: {resolveDocumentStageDescription(doc) || '-'}
+                                <Box component="span" sx={{ fontWeight: 700 }}>
+                                  Description:
+                                </Box>{' '}
+                                {resolveDocumentStageDescription(doc) || '-'}
                               </Typography>
                               <Typography variant="caption" display="block" sx={{ wordBreak: 'break-word' }}>
-                                Tracking: {resolveDocumentStageTracking(doc) || '-'}
+                                <Box component="span" sx={{ fontWeight: 700 }}>
+                                  Tracking:
+                                </Box>{' '}
+                                {resolveDocumentStageTracking(doc) || '-'}
                               </Typography>
                               <Stack direction="row" spacing={1} mt={0.75} flexWrap="wrap">
                                 <Link href={resolveDocumentUrl(doc.filePath)} target="_blank" rel="noreferrer">
