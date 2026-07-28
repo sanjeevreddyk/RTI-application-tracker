@@ -149,6 +149,7 @@ export default function RTIDetailsPage() {
     stageName: '',
     stageDate: ''
   });
+  const [downloadDocumentId, setDownloadDocumentId] = useState('');
 
   useEffect(() => {
     dispatch(fetchRtiById(id));
@@ -341,6 +342,34 @@ export default function RTIDetailsPage() {
     return latest?.stageName || selected?.status || '';
   }, [stages, selected?.status]);
   const isCaseClosed = latestStageName === 'Case Closed';
+  const completedStageNames = useMemo(() => {
+    const completed = new Set(stages.map((stage) => stage?.stageName).filter(Boolean));
+    const latestIndex = stageIndexMap.get(latestStageName) ?? -1;
+
+    if (latestIndex >= 0) {
+      stageNames.slice(0, latestIndex + 1).forEach((stage) => completed.add(stage));
+    }
+
+    return completed;
+  }, [latestStageName, stageIndexMap, stages]);
+  const downloadableDocuments = useMemo(
+    () =>
+      documents.filter((doc) => {
+        const stageName = doc?.stageName || '';
+        return stageName && completedStageNames.has(stageName);
+      }),
+    [completedStageNames, documents]
+  );
+  const selectedDownloadDocument = useMemo(
+    () => downloadableDocuments.find((doc) => doc._id === downloadDocumentId) || null,
+    [downloadDocumentId, downloadableDocuments]
+  );
+
+  useEffect(() => {
+    if (downloadDocumentId && !selectedDownloadDocument) {
+      setDownloadDocumentId('');
+    }
+  }, [downloadDocumentId, selectedDownloadDocument]);
 
   const resolveDocumentStageDate = (doc) => {
     if (doc?.stageId && stageDateById.has(String(doc.stageId))) {
@@ -501,6 +530,21 @@ export default function RTIDetailsPage() {
 
   function closeEditStageDialog() {
     setEditStageDialog({ open: false, stageName: '', stageDate: '' });
+  }
+
+  function downloadSelectedDocument() {
+    if (!selectedDownloadDocument) {
+      return;
+    }
+
+    const link = document.createElement('a');
+    link.href = resolveDocumentUrl(selectedDownloadDocument.filePath);
+    link.download = selectedDownloadDocument.fileName || 'rti-document';
+    link.target = '_blank';
+    link.rel = 'noreferrer';
+    document.body.appendChild(link);
+    link.click();
+    link.remove();
   }
 
   async function saveStageDateEdit() {
@@ -748,6 +792,38 @@ export default function RTIDetailsPage() {
         <Grid2 size={{ xs: 12, md: 7 }}>
           <Paper sx={{ p: 2 }}>
             <Typography variant="subtitle1" fontWeight={700} mb={1}>Document Repository</Typography>
+            <Box sx={{ p: 1.5, mb: 2, border: '1px solid', borderColor: 'divider', borderRadius: 1 }}>
+              <Typography variant="subtitle1" fontWeight={700} mb={1}>Download</Typography>
+              <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1}>
+                <TextField
+                  select
+                  label="Stage Document"
+                  value={downloadDocumentId}
+                  onChange={(e) => setDownloadDocumentId(e.target.value)}
+                  fullWidth
+                  disabled={!downloadableDocuments.length}
+                  helperText={
+                    downloadableDocuments.length
+                      ? 'Only documents from completed stages are shown.'
+                      : 'No completed-stage documents available.'
+                  }
+                >
+                  {downloadableDocuments.map((doc) => (
+                    <MenuItem key={doc._id} value={doc._id}>
+                      {doc.stageName} - {doc.fileName}
+                    </MenuItem>
+                  ))}
+                </TextField>
+                <Button
+                  variant="contained"
+                  onClick={downloadSelectedDocument}
+                  disabled={!selectedDownloadDocument}
+                  sx={{ minWidth: { xs: '100%', sm: 130 }, alignSelf: { sm: 'flex-start' } }}
+                >
+                  Download
+                </Button>
+              </Stack>
+            </Box>
             <Box component="form" onSubmit={submitDocuments}>
               <Stack direction={{ xs: 'column', md: 'row' }} spacing={1} mb={2}>
                 <TextField

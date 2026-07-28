@@ -6,7 +6,7 @@ Use this file to give any new Codex session enough context to continue work with
 - Project name: RTI Case Management System
 - One-line purpose: Authenticated full-stack tracker for RTI applications, lifecycle stages, documents, notes, deadlines, analytics, calendar views, exports, and draft generation.
 - Current status: `active dev`
-- Last updated on (YYYY-MM-DD): 2026-04-26
+- Last updated on (YYYY-MM-DD): 2026-07-28
 - Owner(s): `TODO`
 
 ## 2) Architecture At A Glance
@@ -102,6 +102,7 @@ Add short entries like:
 - What was just completed:
 - Added document upload date and stage description visibility in the RTI details document tables; new stage uploads now snapshot the stage description on each document.
 - Recent shipped updates (latest commits):
+  - RTI details document repository now has a Download selector limited to documents from completed/current stages.
   - Stage document lists now show Upload Date and Description columns/cards; document uploads persist the stage description submitted with the stage form.
   - Documentation now calls out the authenticated route map, RTI lifecycle scope, stage-wise postal/appellate authority fields, calendar view, and document repository behavior.
   - RTI list mobile cards are now fully clickable to open details (same behavior as `View`), while `Edit`/`Delete` remain independent actions.
